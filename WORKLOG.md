@@ -212,3 +212,46 @@ button, clear-all callback). Room DAO behavior covered by the 5 Phase-0 Robolect
 **Open questions.** None.
 
 **Next task ID.** 4 (scientific mode).
+
+---
+
+## Phase 4 — scientific mode
+
+**Summary.** SCI toggle in the top bar expands (AnimatedVisibility expand/fade) a scientific block
+above the base keypad: a DEG/RAD chip (tap = angle toggle, label always reflects mode → indicator
+requirement), a "2nd" chip (fills with primary color while active), and three function rows.
+Primary rows: sin cos tan ln / log √ ^ ! / π e %. With 2nd active the first two rows Crossfade to:
+asin acos atan log2 / cbrt abs (constants and % stay put). Parentheses deliberately live only in
+the base grid to keep test tags unique. Switching basic/scientific preserves the expression
+(state lives in the ViewModel; the flag also survives process death via SavedStateHandle).
+Every key carries a content description; ⌫ now supports long-press = clear-all
+(combinedClickable). Function/constant keys after "=" start a new calculation; operators/parens
+continue from the result.
+
+**Files.** app: ui/calculator/Keys.kt (scientific key set + startsNewValue),
+ui/calculator/CalculatorKeypad.kt (sci block, chips, long-press ⌫), ui/AppRoot.kt (SCI toggle in
+top bar), viewmodel/CalculatorViewModel.kt (scientific/secondMode state, command keys),
+res/values/strings.xml (key content descriptions); tests: ui/ScientificUiTest (21 tests),
+CalculatorViewModelTest (+4).
+
+**Tests.** Locally: `:app:testDebugUnitTest` = 66 tests / 0 failures. The spec's "UI test for
+every scientific key" is satisfied: sin/cos/tan/ln/log/√/^/!/π/e/( ) each compute a known value,
+DEG chip toggles label and changes sin(30) 0.5 ↔ -0.988… (RAD), 2nd reveals asin/acos/atan/log2/
+cbrt/abs and each computes (asin(.5)=30, log2(8)=3, cbrt(-8)=-2, abs(-5)=5, acos(1)=0,
+atan(1)=45), mode switches preserve "12+3", long-press ⌫ clears. Total across modules: 241 tests /
+0 failures.
+
+**Decisions.**
+- Secondary functions via a 2ND TOGGLE KEY (not long-press): discoverable, TalkBack-friendly, and
+  long-press is already bound to ⌫-clear. Documented here per spec.
+- Robolectric tests render in an 800×1600 dp virtual window (robolectric.properties qualifiers):
+  with the scientific block visible the keypad is ~9 rows tall (~500 dp); in the default small test
+  window the last base row (0 . = +) fell outside the window and clicks silently missed. Real
+  phones (≥780 dp tall) fit fine; the qualifier only widens CI's virtual screen.
+- DEG/RAD from settings applies at start-up only; the in-session chip toggle always wins.
+- % lives in the scientific block (its engine semantics are documented in Phase 1); basic-mode
+  users keep AC ( ) ⌫ layout.
+
+**Open questions.** None.
+
+**Next task ID.** 5 (settings).

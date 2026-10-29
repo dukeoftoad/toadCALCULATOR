@@ -173,4 +173,30 @@ class CalculatorViewModelTest {
         type(KeypadKey.Backspace)
         assertThat(state().equalsError).isNull()
     }
+
+    @Test
+    fun `function key after equals starts new calculation`() {
+        type(KeypadKey.Digit('2'), KeypadKey.Plus, KeypadKey.Digit('3'), KeypadKey.Equals)
+        type(KeypadKey.Sin)
+        assertThat(state().expression).isEqualTo("sin(")
+        assertThat(state().justEvaluated).isFalse()
+    }
+
+    @Test
+    fun `scientific flag survives process death`() {
+        viewModel.toggleScientific()
+        assertThat(state().scientific).isTrue()
+        val handle = SavedStateHandle(mapOf("calculator.scientific" to true, "calculator.expression" to ""))
+        val revived = CalculatorViewModel(history, settings, handle)
+        assertThat(revived.uiState.value.scientific).isTrue()
+    }
+
+    @Test
+    fun `second mode toggles and resets when scientific turns off`() {
+        viewModel.toggleScientific()
+        viewModel.onKey(KeypadKey.Second)
+        assertThat(state().secondMode).isTrue()
+        viewModel.toggleScientific()
+        assertThat(state().secondMode).isFalse()
+    }
 }

@@ -6,10 +6,17 @@ package com.toadcalculator.ui.calculator
  * Keypad keys. [text] is the exact string inserted into the expression
  * (ASCII operators: the display renders × ÷ − glyphs but the engine parses
  * ASCII, which keeps history entries re-parseable).
+ *
+ * [startsNewValue] marks keys that begin a new calculation right after "="
+ * (values), while operators/parens continue from the result.
  */
-sealed class KeypadKey(val text: String, val display: String = text) {
-    data class Digit(val d: Char) : KeypadKey(d.toString())
-    data object Dot : KeypadKey(".")
+sealed class KeypadKey(
+    val text: String,
+    val display: String = text,
+    val startsNewValue: Boolean = false,
+) {
+    data class Digit(val d: Char) : KeypadKey(d.toString(), startsNewValue = true)
+    data object Dot : KeypadKey(".", startsNewValue = true)
     data object Plus : KeypadKey("+")
     data object Minus : KeypadKey("-")
     data object Mul : KeypadKey("*", "×")
@@ -18,10 +25,32 @@ sealed class KeypadKey(val text: String, val display: String = text) {
     data object RParen : KeypadKey(")")
     data object Percent : KeypadKey("%")
 
+    // Scientific, primary.
+    data object Sin : KeypadKey("sin(", startsNewValue = true)
+    data object Cos : KeypadKey("cos(", startsNewValue = true)
+    data object Tan : KeypadKey("tan(", startsNewValue = true)
+    data object Ln : KeypadKey("ln(", startsNewValue = true)
+    data object Log : KeypadKey("log(", startsNewValue = true)
+    data object Sqrt : KeypadKey("sqrt(", "√", startsNewValue = true)
+    data object Pow : KeypadKey("^")
+    data object Fact : KeypadKey("!")
+    data object Pi : KeypadKey("π", startsNewValue = true)
+    data object E : KeypadKey("e", startsNewValue = true)
+
+    // Scientific, secondary (behind the 2nd toggle).
+    data object Asin : KeypadKey("asin(", startsNewValue = true)
+    data object Acos : KeypadKey("acos(", startsNewValue = true)
+    data object Atan : KeypadKey("atan(", startsNewValue = true)
+    data object Log2 : KeypadKey("log2(", startsNewValue = true)
+    data object Cbrt : KeypadKey("cbrt(", startsNewValue = true)
+    data object Abs : KeypadKey("abs(", startsNewValue = true)
+
     // Non-inserting keys.
     data object Equals : KeypadKey("=")
     data object Backspace : KeypadKey("backspace", "⌫")
     data object Clear : KeypadKey("clear", "AC")
+    data object Second : KeypadKey("2nd", "2nd")
+    data object AngleToggle : KeypadKey("angle", "DEG")
 }
 
 /**

@@ -9,8 +9,10 @@ import androidx.compose.material.icons.filled.List
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -23,17 +25,18 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.toadcalculator.R
 import com.toadcalculator.ui.calculator.CalculatorScreen
 import com.toadcalculator.ui.history.HistorySheet
-import com.toadcalculator.ui.history.HistoryTags
 import com.toadcalculator.viewmodel.CalculatorViewModel
 
 /**
- * Root of the single-activity UI: a compact top bar over the calculator,
- * with the history bottom sheet. Future screens (settings, tools) attach here.
+ * Root of the single-activity UI: a compact top bar over the calculator
+ * (history + scientific keypad toggle), with the history bottom sheet.
+ * Future screens (settings, tools) attach here.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -41,39 +44,54 @@ fun AppRoot() {
     val calculatorViewModel: CalculatorViewModel = viewModel(factory = CalculatorViewModel.Factory)
     var showHistory by rememberSaveable { mutableStateOf(false) }
     val history by calculatorViewModel.history.collectAsStateWithLifecycle()
+    val calculatorState by calculatorViewModel.uiState.collectAsStateWithLifecycle()
+    val scientific = calculatorState.scientific
+    val historyCd = stringResource(R.string.cd_history)
+    val sciCd = stringResource(R.string.cd_toggle_scientific)
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.app_name)) },
                 actions = {
-                    val cd = stringResource(R.string.cd_history)
+                    TextButton(
+                        onClick = { calculatorViewModel.toggleScientific() },
+                        modifier = Modifier
+                            .testTag(AppTags.TOGGLE_SCIENTIFIC)
+                            .semantics { contentDescription = sciCd },
+                    ) {
+                        Text(
+                            text = "SCI",
+                            color = if (scientific) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                            },
+                            fontWeight = FontWeight.Bold,
+                        )
+                    }
                     IconButton(
                         onClick = { showHistory = true },
                         modifier = Modifier
                             .testTag(AppTags.OPEN_HISTORY)
-                            .semantics { contentDescription = cd },
+                            .semantics { contentDescription = historyCd },
                     ) {
                         Icon(Icons.Filled.List, contentDescription = null)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = androidx.compose.material3.MaterialTheme.colorScheme.surface,
+                    containerColor = MaterialTheme.colorScheme.surface,
                 ),
             )
         },
         modifier = Modifier.fillMaxSize(),
     ) { innerPadding ->
-        androidx.compose.foundation.layout.Column(
+        CalculatorScreen(
+            viewModel = calculatorViewModel,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding),
-        ) {
-            CalculatorScreen(
-                viewModel = calculatorViewModel,
-                modifier = Modifier.fillMaxSize(),
-            )
-        }
+        )
     }
 
     HistorySheet(
@@ -91,4 +109,5 @@ fun AppRoot() {
 
 object AppTags {
     const val OPEN_HISTORY = "open_history"
+    const val TOGGLE_SCIENTIFIC = "toggle_scientific"
 }

@@ -40,6 +40,10 @@ data class CalculatorUiState(
     val angleMode: AngleMode = AngleMode.DEG,
     val precision: Int = NumberFormatter.DEFAULT_PRECISION,
     val haptics: Boolean = true,
+    /** Scientific keypad visible (Phase 4). Survives process death. */
+    val scientific: Boolean = false,
+    /** 2nd toggle active: secondary function keys shown. */
+    val secondMode: Boolean = false,
 )
 
 /**
@@ -88,7 +92,12 @@ class CalculatorViewModel(
 
     private fun restoreState(): CalculatorUiState {
         val expression = savedState.get<String>(KEY_EXPRESSION) ?: ""
-        val state = CalculatorUiState(expression = expression, cursor = expression.length)
+        val scientific = savedState.get<Boolean>(KEY_SCIENTIFIC) ?: false
+        val state = CalculatorUiState(
+            expression = expression,
+            cursor = expression.length,
+            scientific = scientific,
+        )
         return applyPreview(state)
     }
 
@@ -98,16 +107,28 @@ class CalculatorViewModel(
             KeypadKey.Equals -> onEquals()
             KeypadKey.Backspace -> onBackspace()
             KeypadKey.Clear -> onClear()
+            KeypadKey.Second -> toggleSecondMode()
+            KeypadKey.AngleToggle -> toggleAngleMode()
             else -> insertKey(key)
         }
     }
 
+    fun toggleScientific() {
+        val newValue = !_uiState.value.scientific
+        savedState[KEY_SCIENTIFIC] = newValue
+        _uiState.update { it.copy(scientific = newValue, secondMode = false) }
+    }
+
+    private fun toggleSecondMode() {
+        _uiState.update { it.copy(secondMode = !it.secondMode) }
+    }
+
     private fun insertKey(key: KeypadKey) {
         val s = _uiState.value
-        // After "=", digits start a new calculation; operators continue from the result.
+        // After "=", values start a new calculation; operators continue from the result.
         var expression = s.expression
         if (s.justEvaluated) {
-            expression = if (key is KeypadKey.Digit || key is KeypadKey.Dot) "" else currentResultText(s)
+            expression = if (key.startsNewValue) "" else currentResultText(s)
         }
         if (key is KeypadKey.Dot && currentNumberHasDot(expression, expression.length)) return
 
@@ -207,6 +228,7 @@ class CalculatorViewModel(
 
     companion object {
         private const val KEY_EXPRESSION = "calculator.expression"
+        private const val KEY_SCIENTIFIC = "calculator.scientific"
 
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {

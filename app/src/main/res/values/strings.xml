@@ -30,4 +30,30 @@
     <string name="confirm_clear_text">This removes all saved calculations. This cannot be undone.</string>
     <string name="action_cancel">Cancel</string>
     <string name="action_confirm_clear">Clear</string>
+
+    <!-- Scientific keys -->
+    <string name="cd_toggle_scientific">Toggle scientific keypad</string>
+    <string name="cd_key_second">Secondary functions</string>
+    <string name="cd_key_angle">Toggle angle mode</string>
+    <string name="cd_key_sin">Sine</string>
+    <string name="cd_key_cos">Cosine</string>
+    <string name="cd_key_tan">Tangent</string>
+    <string name="cd_key_ln">Natural logarithm</string>
+    <string name="cd_key_log">Common logarithm</string>
+    <string name="cd_key_sqrt">Square root</string>
+    <string name="cd_key_pow">Power</string>
+    <string name="cd_key_fact">Factorial</string>
+    <string name="cd_key_pi">Pi</string>
+    <string name="cd_key_e">Euler\'s number</string>
+    <string name="cd_key_asin">Arcsine</string>
+    <string name="cd_key_acos">Arccosine</string>
+    <string name="cd_key_atan">Arctangent</string>
+    <string name="cd_key_log2">Binary logarithm</string>
+    <string name="cd_key_cbrt">Cube root</string>
+    <string name="cd_key_abs">Absolute value</string>
+    <string name="cd_key_percent">Percent</string>
+    <string name="cd_key_plus">Plus</string>
+    <string name="cd_key_minus">Minus</string>
+    <string name="cd_key_mul">Multiply</string>
+    <string name="cd_key_div">Divide</string>
 </resources>
