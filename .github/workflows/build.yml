@@ -1,0 +1,95 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# toadCALCULATOR CI — build, test, size-limit, permission audit.
+# Requires no secrets. Never publishes anywhere.
+name: build
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Setup Gradle (with caching)
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Unit tests (all modules)
+        run: ./gradlew --no-daemon --stacktrace :core-math:test :core-data:testDebugUnitTest :app:testDebugUnitTest
+
+      - name: Assemble debug APK
+        run: ./gradlew --no-daemon :app:assembleDebug
+
+      - name: Assemble release APK (R8)
+        run: ./gradlew --no-daemon :app:assembleRelease
+
+      - name: Enforce release APK size limit (4 MiB)
+        run: |
+          APK=app/build/outputs/apk/release/app-release-unsigned.apk
+          SIZE=$(stat -c%s "$APK")
+          LIMIT=4194304
+          echo "Release APK size: ${SIZE} bytes (limit ${LIMIT})"
+          if [ "$SIZE" -gt "$LIMIT" ]; then
+            echo "::error::Release APK is ${SIZE} bytes, exceeds ${LIMIT} bytes (4 MiB)."
+            exit 1
+          fi
+
+      - name: Upload debug APK (30 days)
+        uses: actions/upload-artifact@v4
+        with:
+          name: toadCALCULATOR-debug
+          path: app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 30
+          if-no-files-found: error
+
+      - name: Upload release APK (30 days)
+        uses: actions/upload-artifact@v4
+        with:
+          name: toadCALCULATOR-release
+          path: app/build/outputs/apk/release/app-release-unsigned.apk
+          retention-days: 30
+          if-no-files-found: error
+
+  permissions-audit:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Assemble release APK
+        run: ./gradlew --no-daemon :app:assembleRelease
+
+      - name: Print merged manifest permission list
+        run: |
+          APK=app/build/outputs/apk/release/app-release-unsigned.apk
+          AAPT2=$(ls -1 "$ANDROID_HOME"/build-tools/*/aapt2 | sort -V | tail -n 1)
+          echo "=== merged manifest permissions of $APK ==="
+          PERMS=$("$AAPT2" dump permissions "$APK")
+          if [ -z "$PERMS" ]; then
+            echo "NONE — zero permissions (as required)"
+          else
+            echo "$PERMS"
+            echo "WARNING: unexpected permissions detected."
+          fi
+          echo "=== end of permission list ==="
