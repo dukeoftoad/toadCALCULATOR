@@ -27,10 +27,13 @@
     <string name="history_delete_cd">Delete entry</string>
     <string name="cd_history">Open history</string>
     <string name="cd_open_settings">Open settings</string>
+    <string name="cd_open_tools">Open tools</string>
     <string name="cd_back">Navigate up</string>
+    <string name="tools_title">Tools</string>
     <string name="confirm_clear_title">Clear history?</string>
     <string name="confirm_clear_text">This removes all saved calculations. This cannot be undone.</string>
     <string name="action_cancel">Cancel</string>
+    <string name="action_ok">OK</string>
     <string name="action_confirm_clear">Clear</string>
 
     <!-- Scientific keys -->
@@ -74,4 +77,59 @@
     <string name="about_privacy">toadCALCULATOR is offline-first: no permissions, no network access, no ads, no tracking. Your data never leaves this device.</string>
     <string name="about_license">This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.</string>
     <string name="about_copyright">Copyright © 2025 toadCALCULATOR contributors · GPL-3.0-or-later</string>
+
+    <!-- Tools -->
+    <string name="tool_converter_title">Unit converter</string>
+    <string name="tool_converter_subtitle">Length, area, volume, mass, temperature, speed, time, data</string>
+    <string name="tool_bmi_title">BMI</string>
+    <string name="tool_bmi_subtitle">Body mass index with WHO categories</string>
+    <string name="tool_age_title">Age</string>
+    <string name="tool_age_subtitle">Exact age and next-birthday countdown</string>
+    <string name="tool_diff_title">Date difference</string>
+    <string name="tool_diff_subtitle">Between two dates, inclusive or exclusive</string>
+    <string name="tool_value">Value</string>
+    <string name="tool_from">From</string>
+    <string name="tool_to">To</string>
+    <string name="tool_swap">Swap units</string>
+    <string name="cat_length">Length</string>
+    <string name="cat_area">Area</string>
+    <string name="cat_volume">Volume</string>
+    <string name="cat_mass">Mass</string>
+    <string name="cat_temperature">Temp</string>
+    <string name="cat_speed">Speed</string>
+    <string name="cat_time">Time</string>
+    <string name="cat_data">Data</string>
+    <string name="tool_height">Height</string>
+    <string name="unit_cm">cm</string>
+    <string name="unit_m">m</string>
+    <string name="unit_ftin">ft+in</string>
+    <string name="unit_kg">kg</string>
+    <string name="unit_lb">lb</string>
+    <string name="tool_feet">Feet</string>
+    <string name="tool_inches">Inches</string>
+    <string name="tool_height_cm">Height (cm)</string>
+    <string name="tool_height_m">Height (m)</string>
+    <string name="tool_weight">Weight</string>
+    <string name="tool_weight_kg">Weight (kg)</string>
+    <string name="tool_weight_lb">Weight (lb)</string>
+    <string name="tool_healthy_range">Healthy weight range</string>
+    <string name="bmi_underweight">Underweight</string>
+    <string name="bmi_normal">Normal weight</string>
+    <string name="bmi_overweight">Overweight</string>
+    <string name="bmi_obese">Obese</string>
+    <string name="tool_birth_date">Date of birth</string>
+    <string name="tool_asof_date">Age at date</string>
+    <string name="tool_age_summary">%1$d y %2$d m %3$d d</string>
+    <string name="tool_total_days">Total days</string>
+    <string name="tool_next_birthday">Next birthday</string>
+    <string name="tool_next_birthday_value">%1$d days (%2$s)</string>
+    <string name="tool_start_date">Start date</string>
+    <string name="tool_end_date">End date</string>
+    <string name="tool_exclusive">Exclusive</string>
+    <string name="tool_inclusive">Inclusive</string>
+    <string name="tool_diff_days_value">%1$d days</string>
+    <string name="tool_diff_weeks">Weeks</string>
+    <string name="tool_diff_weeks_value">%1$d wk %2$d d</string>
+    <string name="tool_diff_ymd">Calendar span</string>
+    <string name="tool_diff_ymd_value">%1$d y %2$d m %3$d d</string>
 </resources>

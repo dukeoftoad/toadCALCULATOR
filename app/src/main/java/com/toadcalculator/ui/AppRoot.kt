@@ -34,24 +34,29 @@ import com.toadcalculator.R
 import com.toadcalculator.ui.calculator.CalculatorScreen
 import com.toadcalculator.ui.history.HistorySheet
 import com.toadcalculator.ui.settings.SettingsScreen
+import com.toadcalculator.ui.tools.AgeScreen
+import com.toadcalculator.ui.tools.BmiScreen
+import com.toadcalculator.ui.tools.DateDiffScreen
+import com.toadcalculator.ui.tools.ToolDestination
+import com.toadcalculator.ui.tools.ToolsHomeScreen
+import com.toadcalculator.ui.tools.UnitConverterScreen
 import com.toadcalculator.ui.theme.ToadCalculatorTheme
 import com.toadcalculator.viewmodel.CalculatorViewModel
 import com.toadcalculator.viewmodel.SettingsViewModel
 
+enum class AppScreen { CALCULATOR, SETTINGS, TOOLS }
+
 /**
- * Root of the single-activity UI. Applies the persisted theme, hosts the
- * calculator (home) and settings screens as simple state-based navigation,
- * plus the history bottom sheet and the SCI toggle.
+ * Root of the single-activity UI. Applies the persisted theme and hosts the
+ * calculator (home), settings, and the four offline tools, plus the history
+ * bottom sheet. Navigation is simple state — no navigation library needed.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppRoot() {
     val settingsViewModel: SettingsViewModel = viewModel(factory = SettingsViewModel.Factory)
     val settingsState by settingsViewModel.uiState.collectAsStateWithLifecycle()
     ToadCalculatorTheme(themeMode = settingsState.theme) {
-        AppScaffold(
-            settingsViewModel = settingsViewModel,
-        )
+        AppScaffold(settingsViewModel = settingsViewModel)
     }
 }
 
@@ -59,14 +64,16 @@ fun AppRoot() {
 @Composable
 private fun AppScaffold(settingsViewModel: SettingsViewModel) {
     val calculatorViewModel: CalculatorViewModel = viewModel(factory = CalculatorViewModel.Factory)
+    var screen by rememberSaveable { mutableStateOf(AppScreen.CALCULATOR) }
+    var activeTool by rememberSaveable { mutableStateOf<ToolDestination?>(null) }
     var showHistory by rememberSaveable { mutableStateOf(false) }
-    var showSettings by rememberSaveable { mutableStateOf(false) }
     val history by calculatorViewModel.history.collectAsStateWithLifecycle()
     val calculatorState by calculatorViewModel.uiState.collectAsStateWithLifecycle()
     val scientific = calculatorState.scientific
     val historyCd = stringResource(R.string.cd_history)
     val sciCd = stringResource(R.string.cd_toggle_scientific)
     val settingsCd = stringResource(R.string.cd_open_settings)
+    val toolsCd = stringResource(R.string.cd_open_tools)
     val backCd = stringResource(R.string.cd_back)
 
     Scaffold(
@@ -74,15 +81,26 @@ private fun AppScaffold(settingsViewModel: SettingsViewModel) {
             TopAppBar(
                 title = {
                     Text(
-                        text = stringResource(
-                            if (showSettings) R.string.settings_title else R.string.app_name,
-                        ),
+                        text = when {
+                            screen == AppScreen.SETTINGS -> stringResource(R.string.settings_title)
+                            screen == AppScreen.TOOLS && activeTool != null ->
+                                com.toadcalculator.ui.tools.toolTitle(activeTool!!)
+                            screen == AppScreen.TOOLS -> stringResource(R.string.tools_title)
+                            else -> stringResource(R.string.app_name)
+                        },
                     )
                 },
                 navigationIcon = {
-                    if (showSettings) {
+                    if (screen != AppScreen.CALCULATOR) {
                         IconButton(
-                            onClick = { showSettings = false },
+                            onClick = {
+                                if (screen == AppScreen.TOOLS && activeTool != null) {
+                                    activeTool = null
+                                } else {
+                                    screen = AppScreen.CALCULATOR
+                                    activeTool = null
+                                }
+                            },
                             modifier = Modifier
                                 .testTag(AppTags.BACK)
                                 .semantics { contentDescription = backCd },
@@ -92,7 +110,7 @@ private fun AppScaffold(settingsViewModel: SettingsViewModel) {
                     }
                 },
                 actions = {
-                    if (!showSettings) {
+                    if (screen == AppScreen.CALCULATOR) {
                         TextButton(
                             onClick = { calculatorViewModel.toggleScientific() },
                             modifier = Modifier
@@ -109,8 +127,16 @@ private fun AppScaffold(settingsViewModel: SettingsViewModel) {
                                 fontWeight = FontWeight.Bold,
                             )
                         }
+                        TextButton(
+                            onClick = { screen = AppScreen.TOOLS },
+                            modifier = Modifier
+                                .testTag(AppTags.OPEN_TOOLS)
+                                .semantics { contentDescription = toolsCd },
+                        ) {
+                            Text(text = "TOOLS", fontWeight = FontWeight.Bold)
+                        }
                         IconButton(
-                            onClick = { showSettings = true },
+                            onClick = { screen = AppScreen.SETTINGS },
                             modifier = Modifier
                                 .testTag(AppTags.OPEN_SETTINGS)
                                 .semantics { contentDescription = settingsCd },
@@ -134,8 +160,11 @@ private fun AppScaffold(settingsViewModel: SettingsViewModel) {
         },
         modifier = Modifier.fillMaxSize(),
     ) { innerPadding ->
-        if (showSettings) {
-            SettingsScreen(
+        val contentModifier = Modifier
+            .fillMaxSize()
+            .padding(innerPadding)
+        when {
+            screen == AppScreen.SETTINGS -> SettingsScreen(
                 state = settingsViewModel.uiState.collectAsStateWithLifecycle().value,
                 onTheme = settingsViewModel::setTheme,
                 onPrecision = settingsViewModel::setPrecision,
@@ -143,17 +172,19 @@ private fun AppScaffold(settingsViewModel: SettingsViewModel) {
                 onHaptics = settingsViewModel::setHaptics,
                 onClearHistory = settingsViewModel::clearHistory,
                 onOpenHistorySheet = { showHistory = true },
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding),
+                modifier = contentModifier,
             )
-        } else {
-            CalculatorScreen(
-                viewModel = calculatorViewModel,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding),
-            )
+            screen == AppScreen.TOOLS -> when (activeTool) {
+                ToolDestination.UNIT_CONVERTER -> UnitConverterScreen(modifier = contentModifier)
+                ToolDestination.BMI -> BmiScreen(modifier = contentModifier)
+                ToolDestination.AGE -> AgeScreen(modifier = contentModifier)
+                ToolDestination.DATE_DIFF -> DateDiffScreen(modifier = contentModifier)
+                null -> ToolsHomeScreen(
+                    onOpen = { activeTool = it },
+                    modifier = contentModifier,
+                )
+            }
+            else -> CalculatorScreen(viewModel = calculatorViewModel, modifier = contentModifier)
         }
     }
 
@@ -174,5 +205,6 @@ object AppTags {
     const val OPEN_HISTORY = "open_history"
     const val TOGGLE_SCIENTIFIC = "toggle_scientific"
     const val OPEN_SETTINGS = "open_settings"
+    const val OPEN_TOOLS = "open_tools"
     const val BACK = "back"
 }

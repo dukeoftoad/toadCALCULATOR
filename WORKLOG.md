@@ -295,3 +295,57 @@ Total: 254 tests / 0 failures.
 **Next task ID.** 6-a (unit converter).
 
 ---
+
+## Phase 6 — offline tools (6-a…6-d)
+
+**Summary.** Four self-contained tools behind a TOOLS entry in the top bar (Tools home list →
+each screen). Pure calculation logic lives in `:core-math/tools` (still zero Android imports —
+guard re-verified): 6-a `Units.kt` — 8 categories (length, area, volume, mass, temperature, speed,
+time, data) as Kotlin constants with exact international factors; generic linear conversion
+value_in_base = (value − offset) × factor with Celsius as the temperature base (offset math for
+°F/K). UI: category chips, from/to dropdowns, swap button, live result (~10 significant digits,
+scientific for extremes). 6-b `Bmi.kt` — height in cm / m / ft+in, weight in kg / lb, BMI = kg/m²,
+WHO categories (18.5 / 25 / 30 boundaries), healthy range 18.5·m²–24.9·m². 6-c `AgeCalc.kt` —
+java.time, Period decomposition, total days, next-birthday countdown with the Feb-29 → Feb-28
+non-leap convention. UI: two Material3 DatePickerDialog fields. 6-d `DateDiff.kt` — days,
+weeks + remainder, years/months/days, inclusive/exclusive toggle (inclusive = end + 1 day).
+Each tool is a self-contained screen with local `remember` state — no shared state, no new
+dependencies, no permissions.
+
+**Files.** core-math: tools/{Units,Bmi,AgeCalc,DateDiff}.kt + 4 test classes; app:
+ui/tools/{ToolCommon,UnitConverterScreen,BmiScreen,AgeScreen,DateDiffScreen}.kt,
+ui/AppRoot.kt (AppScreen enum + TOOLS navigation), res/values/strings.xml (tool strings);
+tests: ui/ToolsUiTest.
+
+**Tests.** core-math: 227 tests / 0 failures — new: 20 unit-converter (exact definitions:
+1 mi = 1609.344 m, 1 lb = 0.45359237 kg, 1 US gal = 3.785411784 L, 1 GiB = 1024 MiB,
+1 GB = 1000 MB, round-trips through base for EVERY unit in EVERY category), 12 BMI (all four WHO
+boundaries 18.49/18.5/24.99/25/29.99/30, ft-in and lb conversions, NaN for impossible inputs),
+9 age (anniversary, month-end clamping Jan-31, Feb-29 birthday on leap and non-leap years,
+birthday-today rollover, total days incl. leap year 366, reversed range rejected),
+8 date-diff (same-day 0/1, leap February 2/3 days, weeks+remainder, Y/M/D decomposition,
+inclusive toggle, reversed range rejected). App: 81 tests / 0 failures — new: 5 tools happy-path
+UI tests (home lists all four, 1 m → 3.280839895 ft, BMI defaults → 22.86 Normal, age result
+renders, date-diff 364 → 365 on inclusive). Engine suite untouched (170). Total: 308 tests /
+0 failures.
+
+**Decisions.**
+- Tool math in `:core-math/tools` (not the app module): keeps it pure-JVM testable and
+  reuses the existing no-Android-imports guard. Documented as a deliberate extension of the
+  engine module's scope (pure math only).
+- All four tools in one commit (deviation from per-tool commits): the shared ToolCommon +
+  navigation refactor touches every tool screen, so intermediate commits would not compile;
+  each tool still has its own isolated logic + UI tests. Ordered internally 6-a → 6-d.
+- Double values for converter math with 1e-9 test tolerance (BMI/converter only; the calculator
+  engine remains BigDecimal).
+- `Icons.Filled.SwapVert` and `Icons.Filled.Apps` are NOT in material-icons-core → replaced with
+  text glyphs/buttons to avoid pulling the multi-MB extended icon set (APK budget).
+- Sandbox limitation logged: R8 minification OOM-kills in this 4 GB container even single-process;
+  release builds + the 4 MiB gate are verified in CI (16 GB runners), which has been green for
+  Phases 0–3. Debug builds + all tests run locally.
+
+**Open questions.** None.
+
+**Next task ID.** 7 (polish).
+
+---
