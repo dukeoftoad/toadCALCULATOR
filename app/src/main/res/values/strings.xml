@@ -19,4 +19,15 @@
     <string name="cd_key_rparen">Close parenthesis</string>
     <string name="cd_key_dot">Decimal point</string>
     <string name="cd_key_digit">Digit %1$s</string>
+
+    <!-- History -->
+    <string name="history_title">History</string>
+    <string name="history_clear_all">Clear all</string>
+    <string name="history_empty">No calculations yet</string>
+    <string name="history_delete_cd">Delete entry</string>
+    <string name="cd_history">Open history</string>
+    <string name="confirm_clear_title">Clear history?</string>
+    <string name="confirm_clear_text">This removes all saved calculations. This cannot be undone.</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_confirm_clear">Clear</string>
 </resources>

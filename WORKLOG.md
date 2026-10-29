@@ -175,3 +175,40 @@ and "1/0 shows inline error", 5 Room DAO). Combined with engine: 206 tests / 0 f
 **Open questions.** None.
 
 **Next task ID.** 3 (history).
+
+---
+
+## Phase 3 — history
+
+**Summary.** History bottom sheet on the calculator home screen (top-bar list icon). Entries are
+shown newest first (Room `ORDER BY timestamp DESC, id DESC`), each row shows the typed expression
+and the formatted result. Tapping a row loads the expression back into the input as editable text
+(preview recomputes); deleting works by swipe-to-dismiss (Material3 SwipeToDismissBox) OR a visible
+trailing delete button (TalkBack-friendly); "Clear all" requires an AlertDialog confirmation.
+`=` writes to Room only on successful evaluation — failures never persist. Persistence across
+restarts comes from Room (`toadcalculator.db`). ViewModel exposes `history: StateFlow<List<
+HistoryEntry>>` (stateIn Eagerly — the list must be warm for the sheet and tests) plus
+`deleteHistoryEntry` / `clearHistory`. AppRoot collects the flow with
+`collectAsStateWithLifecycle` so the sheet is reactive.
+
+**Files.** app: ui/history/HistorySheet.kt, ui/AppRoot.kt (top bar + sheet host),
+viewmodel/CalculatorViewModel.kt (history flow + delete/clear), res/values/strings.xml (history
+strings); tests: HistoryFlowTest, ui/HistoryUiTest. (:core-data backend + DAO tests were built in
+Phase 0 and remain the storage layer.)
+
+**Tests.** Locally: `:app:testDebugUnitTest` = 41 tests / 0 failures — new: 5 ViewModel-flow tests
+(success writes / failure never writes / delete one / clear all / tap-to-load), 5 Robolectric
+Compose tests (newest-first order, empty state hides clear-all, tap loads expression, delete
+button, clear-all callback). Room DAO behavior covered by the 5 Phase-0 Robolectric tests.
+
+**Decisions.**
+- `stateIn(Eagerly)` instead of `WhileSubscribed`: tiny table, keeps tests deterministic and the
+  sheet instantly warm; revisit only if profiling ever shows a cost (it won't at this scale).
+- Both swipe AND a visible delete button: swipe-only delete is a TalkBack anti-pattern.
+- Timestamps intentionally not displayed in rows (calculator history reads better without them);
+  they remain stored for ordering.
+- Failed-expression non-persistence is enforced in the ViewModel's "=" path (only Success adds).
+
+**Open questions.** None.
+
+**Next task ID.** 4 (scientific mode).

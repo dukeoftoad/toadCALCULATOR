@@ -21,8 +21,10 @@ import com.toadcalculator.ui.calculator.currentNumberHasDot
 import java.math.BigDecimal
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -52,6 +54,19 @@ class CalculatorViewModel(
 
     private val _uiState = MutableStateFlow(restoreState())
     val uiState: StateFlow<CalculatorUiState> = _uiState.asStateFlow()
+
+    /** History entries, newest first (Phase 3). Eagerly: always-warm for UI + tests. */
+    val history: StateFlow<List<com.toadcalculator.data.HistoryEntry>> = historyRepository
+        .observeAll()
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    fun deleteHistoryEntry(entry: com.toadcalculator.data.HistoryEntry) {
+        viewModelScope.launch { historyRepository.delete(entry) }
+    }
+
+    fun clearHistory() {
+        viewModelScope.launch { historyRepository.clearAll() }
+    }
 
     init {
         viewModelScope.launch {
