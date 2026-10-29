@@ -349,3 +349,52 @@ renders, date-diff 364 → 365 on inclusive). Engine suite untouched (170). Tota
 **Next task ID.** 7 (polish).
 
 ---
+
+## Phase 7 — polish
+
+**Summary.** Final pass over the release checklist. Adaptive vector icon (with monochrome layer),
+themed splash, per-key content descriptions, and 48 dp minimum touch targets were already in place
+from Phase 0/2/4 and were re-audited. TalkBack pass: every keypad key has a human content
+description (digits, operators, all scientific keys incl. 2nd and DEG/RAD chips), history rows are
+text-read with a labeled delete button (swipe is a redundant gesture, never the only path),
+settings controls are chip/switch labeled, the top-bar actions are described. strings.xml contains
+the complete English scaffolding (errors, keys, history, settings, about, all four tools).
+Baseline profile: deliberately omitted — cold start cannot be measured without a device/emulator
+in this environment, so the "only if cold start exceeds 400 ms" precondition could not be
+evaluated; adding it unmeasured would violate the spec's own condition (revisit with
+`androidx.profileinstaller` + a Macrobenchmark run on real hardware). README refreshed: feature
+list, text architecture diagram, license statement, build/test instructions. CI continues to
+enforce the 4 MiB release size gate and print the merged-manifest permission audit.
+
+**Manual QA checklist** (device-matrix pending — no emulator in this sandbox; verified via 308
+automated tests + code review):
+- [x] 2+3= shows 5; 1/0 shows an inline error, no toast/crash (Compose tests)
+- [x] sin(180°) renders exactly 0; tan(90°) is an inline domain error (engine tests)
+- [x] Live preview updates on every valid parse; invalid partial input shows no preview
+- [x] Token-aware ⌫ (numbers incl. scientific tails, sin(, constants); long-press ⌫ clears
+- [x] History: write on success only, newest first, tap-to-load, swipe delete, clear-all confirm
+- [x] Rotation/process death: expression, result and scientific mode survive (SavedStateHandle tests)
+- [x] Scientific: all keys compute; 2nd row; DEG/RAD indicator; mode switch preserves expression
+- [x] Settings persist across restart (DataStore tests); precision reformats without recomputation
+- [x] Tools: converter round-trips every unit; BMI WHO boundaries; age Feb-29; date-diff inclusive
+- [x] Zero permissions in merged manifest (CI audit step); zero network code paths (no INTERNET)
+- [ ] On-device TalkBack walkthrough (requires hardware — checklist item for the next session)
+- [ ] Cold-start timing on real hardware (baseline profile decision input)
+
+**Files.** README.md, WORKLOG.md. No code changes in this phase; no new dependencies.
+
+**Tests.** No behavior change: full suite re-run locally — core-math 227, app+core-data 81
+(incl. Robolectric Compose), total 308 / 0 failures. Release build + size gate verified by CI
+(this sandbox's 4 GB memory cannot complete R8; runners have 16 GB).
+
+**Decisions.**
+- Baseline profile omitted pending on-device measurement (spec-conditional feature).
+- No new third-party dependencies in the entire project beyond the standard AndroidX/Kotlin stack
+  + test-only JUnit/Truth/Robolectric — each recorded in its phase entry.
+
+**Open questions.** None.
+
+**Next task ID.** End of the planned roadmap (Phase 8 candidates listed in the original spec are
+out of scope for now: loan/GST/discount calculators, widgets, voice input).
+
+---
