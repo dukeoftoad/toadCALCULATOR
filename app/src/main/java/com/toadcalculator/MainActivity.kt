@@ -12,14 +12,13 @@ import com.toadcalculator.ui.theme.ThemeMode
 
 class MainActivity : ComponentActivity() {
 
-    private val appGraph: AppGraph by lazy { AppGraph(applicationContext) }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
         setContent {
+            // Theme preference from settings is wired in Phase 5.
             ToadCalculatorTheme(themeMode = ThemeMode.SYSTEM) {
-                AppRoot(appGraph = appGraph)
+                AppRoot()
             }
         }
     }

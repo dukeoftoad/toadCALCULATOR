@@ -2,4 +2,21 @@
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 <resources>
     <string name="app_name">toadCALCULATOR</string>
+
+    <!-- Inline error messages -->
+    <string name="error_division_by_zero">Cannot divide by zero</string>
+    <string name="error_undefined">Undefined result</string>
+    <string name="error_domain">Out of domain</string>
+    <string name="error_overflow">Number too large</string>
+    <string name="error_syntax">Syntax error at position %1$d</string>
+    <string name="error_unbalanced">Unbalanced parentheses</string>
+
+    <!-- Key content descriptions (TalkBack) -->
+    <string name="cd_key_clear">All clear</string>
+    <string name="cd_key_backspace">Delete</string>
+    <string name="cd_key_equals">Equals</string>
+    <string name="cd_key_lparen">Open parenthesis</string>
+    <string name="cd_key_rparen">Close parenthesis</string>
+    <string name="cd_key_dot">Decimal point</string>
+    <string name="cd_key_digit">Digit %1$s</string>
 </resources>

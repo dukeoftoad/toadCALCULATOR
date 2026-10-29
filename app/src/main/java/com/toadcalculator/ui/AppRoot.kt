@@ -2,33 +2,17 @@
 
 package com.toadcalculator.ui
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import com.toadcalculator.AppGraph
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.toadcalculator.viewmodel.CalculatorViewModel
+import com.toadcalculator.ui.calculator.CalculatorScreen
 
 /**
- * Root of the single-activity UI. Phase 0 stub; real screens land in Phase 2.
+ * Root of the single-activity UI. Navigation between future screens
+ * (history sheet, settings, tools) is state-based; the calculator is home.
  */
 @Composable
-fun AppRoot(appGraph: AppGraph) {
-    Scaffold { innerPadding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(
-                text = "toadCALCULATOR",
-                style = MaterialTheme.typography.titleLarge,
-            )
-        }
-    }
+fun AppRoot() {
+    val calculatorViewModel: CalculatorViewModel = viewModel(factory = CalculatorViewModel.Factory)
+    CalculatorScreen(viewModel = calculatorViewModel)
 }

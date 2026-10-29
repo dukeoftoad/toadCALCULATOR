@@ -129,3 +129,49 @@ android/androidx imports.
 **Open questions.** None. Engine is frozen for UI work.
 
 **Next task ID.** 2 (basic UI).
+
+---
+
+## Phase 2 — basic calculator UI
+
+**Summary.** Single-screen Compose calculator wired to the engine. Display panel (right-aligned,
+auto-scrolling expression line, live result preview in primary color) plus a 5×4 keypad
+(AC ( ) ⌫ / 7 8 9 × / 4 5 6 − / 1 2 3 + / 0 . =) with min-48 dp targets and per-key content
+descriptions. Live preview evaluates on every keystroke through `CalculatorViewModel` (StateFlow +
+UDF); invalid partial expressions show no preview, while "=" failures render an inline error string
+(never a toast). `=` writes successful evaluations to history (stored expression is the original
+typed text, result stored pre-formatted) and continues calculations from the result when an
+operator is typed next; digits start fresh. Token-aware backspace implemented as a pure function
+(`backspaceToken`): whole number runs (including scientific-notation `1.5E-3` tails), whole
+identifier runs (`sin(` disappears in one press), single chars otherwise. Landscape layout
+(detects ≥600 dp width) moves the display beside a split 2×5 keypad. Rotation/process-death
+restores the expression via `SavedStateHandle`. DI moved to `ToadApplication` +
+`viewModelFactory`; manual injection retained. CI GREEN on the previous commit (f1abb59):
+debug+release APKs built, release under the size gate, permission audit printed.
+
+**Files.** app: ToadApplication.kt (replaces AppGraph.kt), MainActivity.kt (updated), ui/AppRoot.kt
+(updated), ui/calculator/{Keys,CalcTags,CalculatorScreen,CalculatorKeypad}.kt,
+viewmodel/CalculatorViewModel.kt, AndroidManifest.xml (application name), res/values/strings.xml
+(error strings + key content descriptions); tests: BackspaceTest, CalculatorViewModelTest,
+ui/CalculatorUiTest, fakes/Fakes.kt, res/test robolectric.properties.
+
+**Tests.** Locally (Temurin JDK 21, API-34 Robolectric): `:app:testDebugUnitTest` +
+`:core-data:testDebugUnitTest` = 36 tests / 0 failures (12 token-backspace, 15 ViewModel incl.
+SavedStateHandle restore + history-write semantics, 4 Robolectric Compose UI incl. "2+3= shows 5"
+and "1/0 shows inline error", 5 Room DAO). Combined with engine: 206 tests / 0 failures.
+
+**Decisions.**
+- Keypad shows ÷ × − glyphs but inserts ASCII `* / -` so history entries re-parse exactly.
+- `⌫` deletes tokens; `AC` clears; long-press-clear arrives with the scientific layout (Phase 4
+  restructures the keypad; adding combined click/long-press there avoids touching this grid twice).
+- Settings' angle mode sets the START-UP mode only (collected once); session toggles (Phase 4) win
+  afterwards — documented to avoid re-collect overwriting user toggles mid-session.
+- Cursor is kept at end-of-text in the UI for Phase 2; the pure backspace function supports any
+  cursor position and is unit-tested for it (future text-editing display can reuse it).
+- Local Android SDK (platform 36, build-tools 35) installed in the sandbox to compile and run
+  Robolectric tests without CI round-trips; sandbox JDK was JRE-only, so a Temurin JDK 21 was added
+  at user level (`~/.gradle/gradle.properties`, not committed).
+
+**Open questions.** None.
+
+**Next task ID.** 3 (history).
