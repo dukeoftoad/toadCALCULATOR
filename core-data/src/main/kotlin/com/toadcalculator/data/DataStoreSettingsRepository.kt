@@ -21,12 +21,14 @@ private const val STORE_NAME = "toadcalculator_settings"
 private val Context.settingsDataStore: DataStore<Preferences> by preferencesDataStore(name = STORE_NAME)
 
 private object Keys {
+    val THEME = stringPreferencesKey("theme")
     val PRECISION = intPreferencesKey("precision")
     val ANGLE_MODE = stringPreferencesKey("angle_mode")
     val HAPTICS = booleanPreferencesKey("haptics")
 }
 
 object SettingsDefaults {
+    val THEME = ThemeMode.SYSTEM
     const val PRECISION = 12
     val ANGLE_MODE = AngleModePref.DEG
     const val HAPTICS = true
@@ -35,6 +37,11 @@ object SettingsDefaults {
 class DataStoreSettingsRepository(
     private val context: Context,
 ) : SettingsRepository {
+
+    override val theme: Flow<ThemeMode> = context.settingsDataStore.data.map { prefs ->
+        runCatching { ThemeMode.valueOf(prefs[Keys.THEME] ?: SettingsDefaults.THEME.name) }
+            .getOrDefault(SettingsDefaults.THEME)
+    }
 
     override val precision: Flow<Int> = context.settingsDataStore.data.map { prefs ->
         val v = prefs[Keys.PRECISION] ?: SettingsDefaults.PRECISION
@@ -48,6 +55,10 @@ class DataStoreSettingsRepository(
 
     override val haptics: Flow<Boolean> = context.settingsDataStore.data.map { prefs ->
         prefs[Keys.HAPTICS] ?: SettingsDefaults.HAPTICS
+    }
+
+    override suspend fun setTheme(value: ThemeMode) {
+        context.settingsDataStore.edit { it[Keys.THEME] = value.name }
     }
 
     override suspend fun setPrecision(value: Int) {

@@ -211,7 +211,7 @@ button, clear-all callback). Room DAO behavior covered by the 5 Phase-0 Robolect
 
 **Open questions.** None.
 
-**Next task ID.** 4 (scientific mode).
+**Next task ID.** 5 (settings).
 
 ---
 
@@ -255,3 +255,43 @@ atan(1)=45), mode switches preserve "12+3", long-press ⌫ clears. Total across 
 **Open questions.** None.
 
 **Next task ID.** 5 (settings).
+## Phase 5 — settings
+
+**Summary.** Settings screen (gear icon in the top bar; back arrow returns) driven by a new
+`SettingsViewModel` whose single StateFlow is a `combine` of all four preference flows: theme
+(System/Light/Dark filter chips), decimal precision (6/8/10/12/15 chips), default angle mode
+(DEG/RAD chips), haptics (Switch). Plus "Clear history" (AlertDialog confirmation → history
+repository) and an About bottom sheet showing the version (BuildConfig.VERSION_NAME), the
+GPL-3.0-or-later notice, the copyright line, and an explicit privacy statement: offline-first,
+no permissions, no network access, no ads, no tracking. Theme is now persisted in DataStore
+(`theme` string key) — `SettingsRepository` grew a `theme` flow + `setTheme`; `AppRoot` collects
+it and applies `ToadCalculatorTheme` around everything (local duplicate ThemeMode enum in
+ui.theme removed in favor of the data one). Changing precision reformats the live preview
+immediately: the ViewModel keeps the evaluated BigDecimal and re-renders through
+NumberFormatter with the new precision — no engine recomputation (tested with isSameInstanceAs).
+
+**Files.** core-data: SettingsRepository.kt + DataStoreSettingsRepository.kt (theme preference);
+app: viewmodel/SettingsViewModel.kt, ui/settings/SettingsScreen.kt (incl. AboutSheet),
+ui/AppRoot.kt (theme application + state-based navigation calculator↔settings),
+ui/theme/Theme.kt (uses data.ThemeMode), MainActivity.kt (simplified), res/values/strings.xml
+(settings + about strings); tests: DataStoreSettingsRepositoryTest (core-data),
+SettingsViewModelTest, ui/SettingsUiTest, fakes/Fakes.kt (+theme).
+
+**Tests.** Locally: app+core-data = 84 tests / 0 failures — new: 3 DataStore tests (defaults,
+persistence across a fresh repository instance in the same store, invalid precision rejected),
+4 ViewModel tests (defaults, write-through, clear-history, precision reformat-without-recompute),
+7 UI tests (all groups visible, each control fires its callback, clear-all needs confirmation,
+About shows version + GPL notice + no-permissions statement). Engine unchanged: 170 tests.
+Total: 254 tests / 0 failures.
+
+**Decisions.**
+- Filter chips over radio dialogs: all options fit and are visible at once; fewer taps.
+- Theme applied at the AppRoot level (single theme host); dynamic color stays off (spec).
+- `combine` of the four flows (vs. four collectors): one atomic SettingsUiState, no interleaving.
+- Settings survive restart via the existing DataStore (verified by DataStore tests).
+
+**Open questions.** None.
+
+**Next task ID.** 6-a (unit converter).
+
+---

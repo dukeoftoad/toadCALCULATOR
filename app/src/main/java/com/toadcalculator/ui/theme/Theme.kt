@@ -12,9 +12,6 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 
-/** App theme preference, mirroring [com.toadcalculator.data.ThemeMode]. */
-enum class ThemeMode { SYSTEM, LIGHT, DARK }
-
 private val LightColors = lightColorScheme(
     primary = LightPrimary,
     onPrimary = LightOnPrimary,
@@ -70,17 +67,18 @@ private val DarkColors = darkColorScheme(
 /**
  * Material 3 theme for toadCALCULATOR.
  * Dynamic color is OFF by default: the toad-green brand palette is always used.
+ * Theme preference comes from com.toadcalculator.data.ThemeMode (DataStore).
  */
 @Composable
 fun ToadCalculatorTheme(
-    themeMode: ThemeMode = ThemeMode.SYSTEM,
+    themeMode: com.toadcalculator.data.ThemeMode = com.toadcalculator.data.ThemeMode.SYSTEM,
     dynamicColor: Boolean = false,
     content: @Composable () -> Unit,
 ) {
     val darkTheme = when (themeMode) {
-        ThemeMode.SYSTEM -> isSystemInDarkTheme()
-        ThemeMode.LIGHT -> false
-        ThemeMode.DARK -> true
+        com.toadcalculator.data.ThemeMode.SYSTEM -> isSystemInDarkTheme()
+        com.toadcalculator.data.ThemeMode.LIGHT -> false
+        com.toadcalculator.data.ThemeMode.DARK -> true
     }
 
     val colorScheme = when {

@@ -26,6 +26,8 @@
     <string name="history_empty">No calculations yet</string>
     <string name="history_delete_cd">Delete entry</string>
     <string name="cd_history">Open history</string>
+    <string name="cd_open_settings">Open settings</string>
+    <string name="cd_back">Navigate up</string>
     <string name="confirm_clear_title">Clear history?</string>
     <string name="confirm_clear_text">This removes all saved calculations. This cannot be undone.</string>
     <string name="action_cancel">Cancel</string>
@@ -56,4 +58,20 @@
     <string name="cd_key_minus">Minus</string>
     <string name="cd_key_mul">Multiply</string>
     <string name="cd_key_div">Divide</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_theme">Theme</string>
+    <string name="theme_system">System</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="settings_precision">Decimal precision (significant digits)</string>
+    <string name="settings_angle_mode">Default angle mode</string>
+    <string name="settings_haptics">Key press vibration</string>
+    <string name="settings_clear_history">Clear history</string>
+    <string name="settings_about">About</string>
+    <string name="about_version">Version %1$s</string>
+    <string name="about_privacy">toadCALCULATOR is offline-first: no permissions, no network access, no ads, no tracking. Your data never leaves this device.</string>
+    <string name="about_license">This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.</string>
+    <string name="about_copyright">Copyright © 2025 toadCALCULATOR contributors · GPL-3.0-or-later</string>
 </resources>

@@ -9,6 +9,9 @@ enum class ThemeMode { SYSTEM, LIGHT, DARK }
 
 /** Persisted user settings, exposed as hot Flows. */
 interface SettingsRepository {
+    /** App theme. */
+    val theme: Flow<ThemeMode>
+
     /** Display precision in significant digits: one of 6, 8, 10, 12, 15. */
     val precision: Flow<Int>
 
@@ -17,6 +20,8 @@ interface SettingsRepository {
 
     /** Whether key presses produce haptic feedback (also gated by system settings). */
     val haptics: Flow<Boolean>
+
+    suspend fun setTheme(value: ThemeMode)
 
     suspend fun setPrecision(value: Int)
 

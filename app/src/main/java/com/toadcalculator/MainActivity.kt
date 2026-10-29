@@ -7,8 +7,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.toadcalculator.ui.AppRoot
-import com.toadcalculator.ui.theme.ToadCalculatorTheme
-import com.toadcalculator.ui.theme.ThemeMode
 
 class MainActivity : ComponentActivity() {
 
@@ -16,10 +14,7 @@ class MainActivity : ComponentActivity() {
         installSplashScreen()
         super.onCreate(savedInstanceState)
         setContent {
-            // Theme preference from settings is wired in Phase 5.
-            ToadCalculatorTheme(themeMode = ThemeMode.SYSTEM) {
-                AppRoot()
-            }
+            AppRoot()
         }
     }
 }

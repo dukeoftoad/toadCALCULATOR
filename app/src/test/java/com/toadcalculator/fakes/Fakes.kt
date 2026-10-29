@@ -36,13 +36,19 @@ class FakeHistoryRepository : HistoryRepository {
 }
 
 class FakeSettingsRepository : SettingsRepository {
+    private val _theme = MutableStateFlow(com.toadcalculator.data.ThemeMode.SYSTEM)
     private val _precision = MutableStateFlow(12)
     private val _angleMode = MutableStateFlow(AngleModePref.DEG)
     private val _haptics = MutableStateFlow(true)
 
-    override val precision: Flow<Int> = _precision
-    override val angleMode: Flow<AngleModePref> = _angleMode
-    override val haptics: Flow<Boolean> = _haptics
+    override val theme: MutableStateFlow<com.toadcalculator.data.ThemeMode> = _theme
+    override val precision: MutableStateFlow<Int> = _precision
+    override val angleMode: MutableStateFlow<AngleModePref> = _angleMode
+    override val haptics: MutableStateFlow<Boolean> = _haptics
+
+    override suspend fun setTheme(value: com.toadcalculator.data.ThemeMode) {
+        _theme.value = value
+    }
 
     override suspend fun setPrecision(value: Int) {
         _precision.value = value
