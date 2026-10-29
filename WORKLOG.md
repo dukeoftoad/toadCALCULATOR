@@ -78,3 +78,54 @@ sandbox); CI is the gate for `:app`/`:core-data` compilation and Robolectric tes
 **Open questions.** None.
 
 **Next task ID.** 1 (engine).
+
+---
+
+## Phase 1 — math engine
+
+**Summary.** Pure-Kotlin expression engine in `:core-math` (zero Android imports, enforced by the
+`verifyNoAndroidImports` Gradle guard): hand-written Lexer (token positions, `e`-notation vs
+Euler's constant disambiguation, unicode operator mapping, `log2` as a single token, `%` classified
+at lex time as binary modulo when an operand follows, else postfix percent), recursive-descent
+Parser with precedence climbing (additive 1 < multiplicative/implicit-mult 2 < unary 3 < right-assoc
+`^` 4 < postfix `!`/`%` 5; `-2^2 = -4`; `2^-3` works), AstNode with a `Group` wrapper that preserves
+parenthesization for percent semantics, Evaluator on `BigDecimal` with `MathContext.DECIMAL64`,
+Functions table (19 functions; DEG/RAD affects only sin/cos/tan/asin/acos/atan; `|sin|<1e-12` snaps
+to 0 so `sin(180°)` prints exactly `0`; `tan` is a DomainError beyond `1e15`; `round` is HALF_UP on
+exact BigDecimal), NumberFormatter (6/8/10/12/15 significant digits, trailing-zero strip, scientific
+at |x| ≥ 1e12 or < 1e-9, grouping only on display strings), and the public entry point
+`evaluate(input, angleMode): MathResult` which never throws (every failure maps to one of the six
+typed errors; overflow bound is 1e6144, IEEE decimal128 emax).
+
+**Files.** core-math/src/main/kotlin/com/toadcalculator/math/{Math,MathError,MathResult,Token,
+Lexer,AstNode,Parser,Evaluator,Functions,NumberFormatter}.kt; tests: TestHelpers + {Lexer,Parser,
+Arithmetic,Functions,PercentSemantics,Factorial,Formatter,Fuzz,Api}Test.kt; gradle/libs.versions.toml
+(activity-compose 1.10.2 → 1.10.1: the 1.10.2 pin does not exist on Google Maven — found via first CI run).
+
+**Tests.** `:core-math:test`: 170 tests / 0 failures locally (JDK 21, Gradle 8.13), including a
+seeded 1000-expression fuzz test, a 1000-expression balanced-grammar fuzz test, an adversarial-input
+test (pathological scales, 1e999999999 literals, deep power towers) and the full spec checklist
+(precedence, associativity, unary-minus-vs-`^`, implicit multiplication, all functions in DEG and
+RAD, domain errors, overflow, factorial edges, percent semantics, formatter thresholds, sin(180°)=0,
+tan(90°)=DomainError). `:core-math:verifyNoAndroidImports`: OK, and `grep` confirms zero
+android/androidx imports.
+
+**Decisions.**
+- Engine written fresh rather than adapted from the reference repos: the required public API
+  (BigDecimal + DECIMAL64, typed MathError, percent-of-total semantics, 1e6144 bound) is tighter
+  than any single reference; references informed the design only. No third-party runtime deps in
+  the engine module (JUnit/Truth are test-only).
+- `%` disambiguation: lexer classifies `x % y` (operand follows) as binary modulo, `x%` /
+  `x%+…` as postfix percent. Documented with tests; `5 % -3` therefore parses as `5% − 3`; use
+  `5 % (-3)` for negative modulo.
+- Percent-of-total (`A ± B%` = A ± A·B/100) applies only when the right operand is syntactically
+  a percent expression; `(10%)` evaluates plain via the `Group` AST wrapper. Tested.
+- Overflow bound 1e6144 also applies to literals and `+`/`-` operands, which keeps the engine
+  crash-proof against pathological scales (fuzz-verified).
+- Astronomical exponents (|exp| > 2^31) have defined semantics (0/±1 bases, parity for −1,
+  underflow-to-zero otherwise); documented and tested.
+- Numbers like `2e3` lex as 2000 (exponent), `2e` as 2·e; `1.e3` → 1000; `5.` → 5; documented.
+
+**Open questions.** None. Engine is frozen for UI work.
+
+**Next task ID.** 2 (basic UI).

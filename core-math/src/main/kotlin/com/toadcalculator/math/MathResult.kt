@@ -1,6 +1,4 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-//
-// Placeholder engine types. Replaced by the real expression engine in Phase 1.
 
 package com.toadcalculator.math
 
@@ -15,5 +13,5 @@ sealed class MathResult {
     data class Success(val value: BigDecimal) : MathResult()
 
     /** Evaluation produced a typed error. */
-    data class Failure(val marker: String) : MathResult()
+    data class Failure(val error: MathError) : MathResult()
 }
