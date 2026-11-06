@@ -8,18 +8,24 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
+/**
+ * Typography. Display styles use tabular figures ("tnum") so the expression
+ * and result never jitter horizontally as digits change while typing.
+ */
 val ToadTypography = Typography(
     displayLarge = TextStyle(
         fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.Light,
-        fontSize = 44.sp,
-        lineHeight = 52.sp,
+        fontWeight = FontWeight.Normal,
+        fontSize = 46.sp,
+        lineHeight = 54.sp,
+        fontFeatureSettings = "tnum",
     ),
     headlineMedium = TextStyle(
         fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.Normal,
-        fontSize = 26.sp,
-        lineHeight = 34.sp,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 28.sp,
+        lineHeight = 36.sp,
+        fontFeatureSettings = "tnum",
     ),
     titleLarge = TextStyle(
         fontFamily = FontFamily.Default,

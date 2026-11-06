@@ -36,14 +36,18 @@ sealed class KeypadKey(
     data object Fact : KeypadKey("!")
     data object Pi : KeypadKey("π", startsNewValue = true)
     data object E : KeypadKey("e", startsNewValue = true)
+    /** Inserts "^2" — square. Uses the existing power operator; no engine change. */
+    data object Square : KeypadKey("^2", "x²")
 
-    // Scientific, secondary (behind the 2nd toggle).
-    data object Asin : KeypadKey("asin(", startsNewValue = true)
-    data object Acos : KeypadKey("acos(", startsNewValue = true)
-    data object Atan : KeypadKey("atan(", startsNewValue = true)
-    data object Log2 : KeypadKey("log2(", startsNewValue = true)
-    data object Cbrt : KeypadKey("cbrt(", startsNewValue = true)
-    data object Abs : KeypadKey("abs(", startsNewValue = true)
+    // Scientific, secondary (behind the 2nd toggle). [display] is the on-key
+    // label only; [text] is what lands in the expression, so history entries
+    // stay ASCII-parseable.
+    data object Asin : KeypadKey("asin(", "sin⁻¹", startsNewValue = true)
+    data object Acos : KeypadKey("acos(", "cos⁻¹", startsNewValue = true)
+    data object Atan : KeypadKey("atan(", "tan⁻¹", startsNewValue = true)
+    data object Log2 : KeypadKey("log2(", "log₂", startsNewValue = true)
+    data object Cbrt : KeypadKey("cbrt(", "∛", startsNewValue = true)
+    data object Abs : KeypadKey("abs(", "|x|", startsNewValue = true)
 
     // Non-inserting keys.
     data object Equals : KeypadKey("=")
