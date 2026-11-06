@@ -57,10 +57,14 @@
     <string name="cd_key_cbrt">Cube root</string>
     <string name="cd_key_abs">Absolute value</string>
     <string name="cd_key_percent">Percent</string>
+    <string name="cd_key_square">Square</string>
     <string name="cd_key_plus">Plus</string>
     <string name="cd_key_minus">Minus</string>
     <string name="cd_key_mul">Multiply</string>
     <string name="cd_key_div">Divide</string>
+
+    <!-- Display interactions -->
+    <string name="copied_toast">Copied to clipboard</string>
 
     <!-- Settings -->
     <string name="settings_title">Settings</string>

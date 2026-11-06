@@ -2,19 +2,23 @@
 
 package com.toadcalculator.ui
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -22,12 +26,18 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.toadcalculator.R
@@ -60,6 +70,24 @@ fun AppRoot() {
     }
 }
 
+/** Single-line brand wordmark: "toad" in the accent green, rest in onSurface. */
+@Composable
+private fun BrandTitle() {
+    val primary = MaterialTheme.colorScheme.primary
+    Text(
+        text = buildAnnotatedString {
+            withStyle(SpanStyle(color = primary, fontWeight = FontWeight.ExtraBold)) {
+                append("toad")
+            }
+            withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
+                append("CALCULATOR")
+            }
+        },
+        style = MaterialTheme.typography.titleLarge.copy(fontSize = 17.sp),
+        maxLines = 1,
+    )
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun AppScaffold(settingsViewModel: SettingsViewModel) {
@@ -80,15 +108,24 @@ private fun AppScaffold(settingsViewModel: SettingsViewModel) {
         topBar = {
             TopAppBar(
                 title = {
-                    Text(
-                        text = when {
-                            screen == AppScreen.SETTINGS -> stringResource(R.string.settings_title)
-                            screen == AppScreen.TOOLS && activeTool != null ->
-                                com.toadcalculator.ui.tools.toolTitle(activeTool!!)
-                            screen == AppScreen.TOOLS -> stringResource(R.string.tools_title)
-                            else -> stringResource(R.string.app_name)
-                        },
-                    )
+                    when {
+                        screen == AppScreen.SETTINGS -> Text(
+                            text = stringResource(R.string.settings_title),
+                            style = MaterialTheme.typography.titleLarge.copy(fontSize = 17.sp),
+                            maxLines = 1,
+                        )
+                        screen == AppScreen.TOOLS && activeTool != null -> Text(
+                            text = com.toadcalculator.ui.tools.toolTitle(activeTool!!),
+                            style = MaterialTheme.typography.titleLarge.copy(fontSize = 17.sp),
+                            maxLines = 1,
+                        )
+                        screen == AppScreen.TOOLS -> Text(
+                            text = stringResource(R.string.tools_title),
+                            style = MaterialTheme.typography.titleLarge.copy(fontSize = 17.sp),
+                            maxLines = 1,
+                        )
+                        else -> BrandTitle()
+                    }
                 },
                 navigationIcon = {
                     if (screen != AppScreen.CALCULATOR) {
@@ -111,29 +148,42 @@ private fun AppScaffold(settingsViewModel: SettingsViewModel) {
                 },
                 actions = {
                     if (screen == AppScreen.CALCULATOR) {
-                        TextButton(
+                        // SCI pill — compact mode toggle, no more clipped text buttons.
+                        Surface(
                             onClick = { calculatorViewModel.toggleScientific() },
+                            shape = RoundedCornerShape(50),
+                            color = if (scientific) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.surfaceContainerHigh
+                            },
+                            contentColor = if (scientific) {
+                                MaterialTheme.colorScheme.onPrimary
+                            } else {
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                            },
                             modifier = Modifier
+                                .height(38.dp)
+                                .padding(start = 4.dp)
                                 .testTag(AppTags.TOGGLE_SCIENTIFIC)
                                 .semantics { contentDescription = sciCd },
                         ) {
-                            Text(
-                                text = "SCI",
-                                color = if (scientific) {
-                                    MaterialTheme.colorScheme.primary
-                                } else {
-                                    MaterialTheme.colorScheme.onSurfaceVariant
-                                },
-                                fontWeight = FontWeight.Bold,
-                            )
+                            Box(contentAlignment = Alignment.Center) {
+                                Text(
+                                    text = "SCI",
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(horizontal = 14.dp),
+                                )
+                            }
                         }
-                        TextButton(
+                        IconButton(
                             onClick = { screen = AppScreen.TOOLS },
                             modifier = Modifier
                                 .testTag(AppTags.OPEN_TOOLS)
                                 .semantics { contentDescription = toolsCd },
                         ) {
-                            Text(text = "TOOLS", fontWeight = FontWeight.Bold)
+                            Icon(Icons.Filled.Build, contentDescription = null)
                         }
                         IconButton(
                             onClick = { screen = AppScreen.SETTINGS },

@@ -112,6 +112,15 @@ class ScientificUiTest {
     }
 
     @Test
+    fun square_key_computes_and_precedence_holds() {
+        press(KeypadKey.Digit('5'), KeypadKey.Square, KeypadKey.Equals)
+        assertResult("25")
+        press(KeypadKey.Clear)
+        press(KeypadKey.Digit('3'), KeypadKey.Plus, KeypadKey.Digit('4'), KeypadKey.Square, KeypadKey.Equals)
+        assertResult("19") // 3 + 4² — power binds tighter than the surrounding addition
+    }
+
+    @Test
     fun fact_key_computes() {
         press(KeypadKey.Digit('5'), KeypadKey.Fact, KeypadKey.Equals)
         assertResult("120")

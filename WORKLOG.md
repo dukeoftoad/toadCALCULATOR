@@ -398,3 +398,89 @@ automated tests + code review):
 out of scope for now: loan/GST/discount calculators, widgets, voice input).
 
 ---
+## Phase 9 — UI/UX refinement + web edition removal — 2026-11-06T17:00:00Z
+
+**Summary.** Modernized the calculator's look and feel and removed the out-of-scope
+web edition. The visible defects from on-device use (screenshot provided by the
+owner): keypad labels rendered at the top-start edge of keys instead of centered;
+digit and operator keys visually indistinguishable (both mid-olive); harsh dark-red
+AC key; top-bar title "toadCALCULATOR" wrapping to two lines with the SCI/TOOLS
+text buttons clipped; after `=` the result appeared twice (big expression line +
+preview line); dead, unstructured space above the display.
+
+Changes, by root cause:
+- **Centered key labels.** `KeypadButton` now places its label in a
+  `Box(contentAlignment = Center)` filling the key — digits and glyphs are
+  horizontally/vertically centered (previously top-start).
+- **Four-tier key hierarchy** using standard Material 3 surface roles only (no new
+  tokens, no new dependencies): digits = `surfaceContainerHigh` (elevated neutral),
+  operator column = `primaryContainer` (green-tinted), row-1 keys = `surfaceContainer`,
+  AC = softened `errorContainer` (dark scheme errorContainer re-tuned `#93000A` →
+  `#56181C` so "clear" reads as a normal action, not a destructive warning),
+  `=` = filled `primary`. Scientific keys sit on `surfaceContainerLow` (quiet tier).
+- **Keypad geometry.** Uniform 56 dp base keys / 50 dp scientific keys (≥48 dp touch
+  target preserved), 8 dp gaps, 16 dp corner radii, 12 dp side padding. Subtle
+  press-in scale animation (0.93) via interaction-source-driven
+  `animateFloatAsState`. Keypad column is now `verticalScroll`-safe so short
+  landscape viewports scroll instead of clipping.
+- **Top bar.** Brand wordmark rendered as a single-line annotated string
+  ("toad" in primary green + "CALCULATOR" bold, 17 sp, maxLines = 1) — no wrapping.
+  SCI/TOOLS text buttons replaced: SCI became a compact 38 dp pill (filled when
+  active), TOOLS became an icon button (`Icons.Filled.Build`). Settings and history
+  icon buttons unchanged. All test tags and content descriptions preserved.
+- **Display.** Single-line expression (was: wrap to 2 lines), auto-shrinking font
+  (46 → 38 → 32 → 26 sp by length), auto-scroll keeps the caret end visible.
+  After `=` the result becomes the main line, tagged `RESULT` and rendered in the
+  primary color — the duplicate preview line is suppressed (previously the number
+  showed twice). Tabular figures (`tnum`) on display styles so digits do not
+  jitter while typing. Empty state shows a dimmed "0". Long-press anywhere on the
+  display copies the current value to the clipboard with a toast confirmation.
+- **Scientific grid.** Last row previously had an empty 4th slot (π e % only).
+  Added `KeypadKey.Square` ("x²", inserts `^2` — uses the existing power operator,
+  zero engine changes) so the constants row is full: π e % x². 2nd-mode rows now
+  swap only the function rows while `^ ! π e % x²` stay put (Casio-style
+  consistency). Secondary keys get display-only labels (sin⁻¹, cos⁻¹, tan⁻¹,
+  log₂, ∛, |x|); inserted text stays ASCII-parseable. 2nd/DEG chips restyled as
+  48 dp pill toggles (DEG keeps tertiary container; 2nd fills primary when active).
+- **Theme.** Dark background deepened `#12140E` → `#0C0E09` (OLED-friendly);
+  primary brightened `#9CD67D` → `#A8DE7B`; full `surfaceContainer*` /
+  `outlineVariant` / `inverse*` roles now set explicitly for both schemes.
+- **Web edition removed.** `web/` (Next.js prototype, added in the previous
+  commit) deleted per owner decision: the product is the Android APK only.
+
+**Files.** `app/src/main/java/com/toadcalculator/ui/theme/Color.kt`,
+`Theme.kt`, `Type.kt`,
+`app/src/main/java/com/toadcalculator/ui/calculator/CalculatorKeypad.kt` (rewrite),
+`CalculatorScreen.kt` (display rewrite), `Keys.kt` (x² + display labels),
+`app/src/main/java/com/toadcalculator/ui/AppRoot.kt` (top bar),
+`app/src/main/res/values/strings.xml` (cd_key_square, copied_toast),
+`app/src/test/java/com/toadcalculator/ui/ScientificUiTest.kt` (x² test),
+`WORKLOG.md`, README.md (status line). Deleted: `web/`.
+
+**Tests.** Added `square_key_computes_and_precedence_holds` (5 x² = 25;
+3 + 4 x² = 19 — power precedence through the UI). Local sandbox run: core-math
+227/227 green (:core-math:test); remaining module suites (:core-data,
+:app incl. Robolectric Compose) verified by CI for this commit — the sandbox
+JRE-only toolchain + throttled Maven Central made the full local run impractical,
+per owner instruction CI is the build/test authority. No existing assertion
+changed.
+
+**Decisions.**
+- `=` moved to the bottom-right corner (row: 0 . + =), matching iOS/Google/
+  Samsung convention; the old layout (0 . = +) left the equals key mid-row.
+- After-`=` duplicate result removed by re-tagging the main line as `RESULT`
+  while `justEvaluated` — chosen so all existing `assertResult` UI assertions
+  keep passing unchanged.
+- AC softened rather than keeping M3's harsh dark `errorContainer`: clear-all is
+  a frequent, non-destructive action on a calculator.
+- x² added to fill the scientific grid hole; strictly a UI-composition of the
+  existing `^` operator, so no engine/parser changes or new tests there.
+- Web edition removal: owner instruction "delete web version, we are only
+  building apk for android".
+
+**Open questions.** None.
+
+**Next task ID.** Owner-directed iteration loop (refine → verify → repeat) on
+real hardware feedback.
+
+---

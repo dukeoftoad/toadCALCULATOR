@@ -2,12 +2,14 @@
 
 package com.toadcalculator.ui.calculator
 
+import android.widget.Toast
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -15,14 +17,20 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.toadcalculator.R
 import com.toadcalculator.math.MathError
@@ -66,45 +74,112 @@ fun CalculatorScreenContent(
     }
 }
 
+/**
+ * The display. Bottom-anchored above the keypad; single-line expression that
+ * auto-shrinks and always keeps its tail visible; live preview beneath while
+ * typing; after `=` the result itself becomes the main line — no duplicated
+ * number shown twice. Long-press the display to copy the current value.
+ */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun DisplayPanel(state: CalculatorUiState, modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    val clipboard = LocalClipboardManager.current
+    val hScroll = rememberScrollState()
+    val justEvaluated = state.justEvaluated && state.equalsError == null
+
+    // Keep the tail (caret end) of long expressions in view.
+    LaunchedEffect(state.expression) {
+        hScroll.animateScrollTo(hScroll.maxValue)
+    }
+
+    // The most useful value to copy: preview/final result, else raw expression.
+    val copyValue = when {
+        state.previewValue != null ->
+            NumberFormatter.format(state.previewValue!!, state.precision, grouping = true)
+        else -> state.expression
+    }
+
     Column(
-        modifier = modifier.padding(horizontal = 20.dp, vertical = 12.dp),
+        modifier = modifier
+            .padding(start = 24.dp, end = 24.dp, bottom = 8.dp)
+            .combinedClickable(
+                onClick = {},
+                onLongClick = {
+                    if (copyValue.isNotEmpty() && copyValue != "0") {
+                        clipboard.setText(AnnotatedString(copyValue))
+                        Toast.makeText(context, R.string.copied_toast, Toast.LENGTH_SHORT).show()
+                    }
+                },
+            ),
         verticalArrangement = Arrangement.Bottom,
         horizontalAlignment = Alignment.End,
     ) {
-        Text(
-            text = state.expression.ifEmpty { "0" },
-            style = MaterialTheme.typography.displayLarge,
-            fontFamily = FontFamily.Default,
-            textAlign = TextAlign.End,
-            maxLines = 2,
-            modifier = Modifier
-                .fillMaxWidth()
-                .horizontalScroll(rememberScrollState())
-                .testTag(CalcTags.EXPRESSION),
-        )
-        Spacer(modifier = Modifier.padding(4.dp))
-        val error = state.equalsError
-        when {
-            error != null -> Text(
-                text = errorMessage(error),
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.error,
-                textAlign = TextAlign.End,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag(CalcTags.ERROR),
-            )
-            state.previewValue != null -> Text(
-                text = NumberFormatter.format(state.previewValue!!, state.precision, grouping = true),
-                style = MaterialTheme.typography.headlineMedium,
+        val expressionText = state.expression.ifEmpty { "0" }
+        // Auto-shrink: long expressions stay single-line and readable.
+        val fontSize = when {
+            expressionText.length > 32 -> 26.sp
+            expressionText.length > 24 -> 32.sp
+            expressionText.length > 16 -> 38.sp
+            else -> 46.sp
+        }
+        if (justEvaluated) {
+            // After `=` the result IS the main line — rendered as the primary accent.
+            Text(
+                text = expressionText,
+                fontSize = fontSize,
+                fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.primary,
                 textAlign = TextAlign.End,
+                maxLines = 1,
+                overflow = TextOverflow.Visible,
                 modifier = Modifier
                     .fillMaxWidth()
+                    .horizontalScroll(hScroll)
                     .testTag(CalcTags.RESULT),
             )
+        } else {
+            Text(
+                text = expressionText,
+                fontSize = fontSize,
+                fontWeight = FontWeight.Normal,
+                color = if (state.expression.isEmpty()) {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                } else {
+                    MaterialTheme.colorScheme.onSurface
+                },
+                textAlign = TextAlign.End,
+                maxLines = 1,
+                overflow = TextOverflow.Visible,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(hScroll)
+                    .testTag(CalcTags.EXPRESSION),
+            )
+            val error = state.equalsError
+            when {
+                error != null -> Text(
+                    text = errorMessage(error),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.error,
+                    textAlign = TextAlign.End,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 6.dp)
+                        .testTag(CalcTags.ERROR),
+                )
+                state.previewValue != null -> Text(
+                    text = NumberFormatter.format(state.previewValue!!, state.precision, grouping = true),
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    textAlign = TextAlign.End,
+                    maxLines = 1,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 6.dp)
+                        .testTag(CalcTags.RESULT),
+                )
+            }
         }
     }
 }
