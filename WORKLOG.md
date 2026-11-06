@@ -484,3 +484,49 @@ changed.
 real hardware feedback.
 
 ---
+## Phase 9.1 — CI recovery: display semantics fix — 2026-11-06T17:45:00Z
+
+**Skill:** implement — iterate (CI red → root-cause → fix → verify green).
+
+CI run 42258213761 (commit 85765af) failed `:app:testDebugUnitTest` with 24
+AssertionErrors: every test touching the display tags
+(`EXPRESSION` / `RESULT` / `ERROR`) — all of `CalculatorUiTest` plus 20 of 22
+`ScientificUiTest` cases. Chip- and key-only tests stayed green, isolating the
+regression to the Phase 9 display refactor.
+
+**Root cause.** The refined `DisplayPanel` wrapped the whole display Column in
+`.combinedClickable(onClick={}, onLongClick=copy)`. Clickable-family modifiers
+attach `semantics { mergeDescendants = true }`, so the display's tagged `Text`
+nodes got folded into the Column's merged semantics node: `onNodeWithTag` on
+the merged tree lost them ("could not find any node that satisfies: TestTag =
+'expression_display'; however, the unmerged tree contains '1' node that
+matches") and visibility/bounds assertions degraded ("The component is not
+displayed!"). Reproduced locally after bootstrapping a JDK 21 + Android SDK 36
+toolchain in the sandbox (SDK present at ~/android-sdk; Maven Central 429s on
+the shared IP worked around with a user-level Aliyun mirror init script +
+pre-cached Robolectric android-all jars — none of it committed).
+
+**Fix.** Replaced the display's `combinedClickable` with a
+`pointerInput + detectTapGestures(onLongPress = …)` — identical long-press
+copy-to-clipboard gesture, zero semantics merging, test tags visible again.
+One file: `CalculatorScreen.kt`. No test changed; no behavior change for users
+beyond keeping the feature working.
+
+**Verification (local, full CI parity).**
+- `:core-math:test :core-data:testDebugUnitTest :app:testDebugUnitTest` →
+  BUILD SUCCESSFUL (previously 24 failed).
+- `:app:assembleRelease` → 1,729,336 bytes (< 4 MiB limit, R8 green).
+- `:app:assembleDebug` → green.
+- `aapt2 dump permissions` on release APK → unchanged (androidx-internal
+  DYNAMIC_RECEIVER_NOT_EXPORTED only; no network/device permissions).
+
+**Decisions.** Kept long-press copy (owner-approved Phase 9 feature) but via a
+raw gesture detector so semantics stay pristine; comment in code documents why
+clickable must not return there.
+
+**Open questions.** None.
+
+**Next.** Push → CI run on this commit; owner asked for the failed build to be
+re-run — this commit is that re-run (CI triggers on push to main).
+
+---

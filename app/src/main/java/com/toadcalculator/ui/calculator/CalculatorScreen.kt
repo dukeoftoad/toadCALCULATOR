@@ -3,8 +3,7 @@
 package com.toadcalculator.ui.calculator
 
 import android.widget.Toast
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -21,6 +20,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -80,7 +80,6 @@ fun CalculatorScreenContent(
  * typing; after `=` the result itself becomes the main line — no duplicated
  * number shown twice. Long-press the display to copy the current value.
  */
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun DisplayPanel(state: CalculatorUiState, modifier: Modifier = Modifier) {
     val context = LocalContext.current
@@ -103,15 +102,21 @@ private fun DisplayPanel(state: CalculatorUiState, modifier: Modifier = Modifier
     Column(
         modifier = modifier
             .padding(start = 24.dp, end = 24.dp, bottom = 8.dp)
-            .combinedClickable(
-                onClick = {},
-                onLongClick = {
-                    if (copyValue.isNotEmpty() && copyValue != "0") {
-                        clipboard.setText(AnnotatedString(copyValue))
-                        Toast.makeText(context, R.string.copied_toast, Toast.LENGTH_SHORT).show()
-                    }
-                },
-            ),
+            .pointerInput(copyValue) {
+                // Long-press copies the current value. Deliberately NOT
+                // clickable/combinedClickable here: clickable adds
+                // mergeDescendants semantics that swallow the display Texts'
+                // test tags into the merged tree (and hide them from
+                // onNodeWithTag), which broke the whole display test suite.
+                detectTapGestures(
+                    onLongPress = {
+                        if (copyValue.isNotEmpty() && copyValue != "0") {
+                            clipboard.setText(AnnotatedString(copyValue))
+                            Toast.makeText(context, R.string.copied_toast, Toast.LENGTH_SHORT).show()
+                        }
+                    },
+                )
+            },
         verticalArrangement = Arrangement.Bottom,
         horizontalAlignment = Alignment.End,
     ) {
