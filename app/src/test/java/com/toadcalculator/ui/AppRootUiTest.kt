@@ -2,8 +2,9 @@
 
 package com.toadcalculator.ui
 
+import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import com.toadcalculator.ui.tools.ToolDestination
@@ -24,7 +25,7 @@ import org.robolectric.RobolectricTestRunner
 class AppRootUiTest {
 
     @get:Rule
-    val composeRule = createComposeRule()
+    val composeRule = createAndroidComposeRule<ComponentActivity>()
 
     @Test
     fun back_from_converter_returns_to_tools_home() {
