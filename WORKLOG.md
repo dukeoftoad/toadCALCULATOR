@@ -685,3 +685,17 @@ Fix: add `androidx.compose.material3.Icon` import; wrap the second span in
 intended (green "toad" + bold "CALCULATOR").
 
 **Next.** Push → CI rerun; then tag v1.0.0 + GitHub Release with the signed APK.
+---
+## Phase 9.6 — CI recovery: root-nav test rule fix — 2026-11-07T03:15:00Z
+
+**Skill:** implement — iterate (CI red → root-cause → fix → verify green).
+
+CI on 40469f3: app sources now compile; failure moved into the new test —
+`AppRootUiTest.kt:39 Unresolved reference 'activity'`. `composeRule.activity` exists
+only on `AndroidComposeTestRule` (i.e. `createAndroidComposeRule<T>()`), not on the
+plain `ComposeContentTestRule` returned by `createComposeRule()`. Fix: rule swapped to
+`createAndroidComposeRule<ComponentActivity>()` (+ `androidx.activity.ComponentActivity`
+import); test-manifest dependency already provides the activity under Robolectric.
+No assertion change.
+
+**Next.** Push → CI rerun; then tag v1.0.0 + GitHub Release with the signed APK.
