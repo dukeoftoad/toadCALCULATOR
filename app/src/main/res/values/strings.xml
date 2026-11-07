@@ -30,6 +30,8 @@
     <string name="cd_open_tools">Open tools</string>
     <string name="cd_back">Navigate up</string>
     <string name="tools_title">Tools</string>
+    <string name="tools_subtitle">Quick utilities that run entirely on your device.</string>
+    <string name="tools_footnote">Offline-first · no ads · no tracking</string>
     <string name="confirm_clear_title">Clear history?</string>
     <string name="confirm_clear_text">This removes all saved calculations. This cannot be undone.</string>
     <string name="action_cancel">Cancel</string>

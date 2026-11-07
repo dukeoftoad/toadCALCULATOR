@@ -8,12 +8,15 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextReplacement
+import com.google.common.truth.Truth.assertThat
 import com.toadcalculator.ui.tools.BmiScreen
 import com.toadcalculator.ui.tools.DateDiffScreen
+import com.toadcalculator.ui.tools.ToolDestination
 import com.toadcalculator.ui.tools.ToolTags
 import com.toadcalculator.ui.tools.ToolsHomeScreen
 import com.toadcalculator.ui.tools.UnitConverterScreen
 import com.toadcalculator.ui.tools.AgeScreen
+import com.toadcalculator.ui.tools.toolCardTag
 import com.toadcalculator.ui.theme.ToadCalculatorTheme
 import org.junit.Rule
 import org.junit.Test
@@ -36,6 +39,20 @@ class ToolsUiTest {
         composeRule.onNodeWithText("BMI").assertIsDisplayed()
         composeRule.onNodeWithText("Age").assertIsDisplayed()
         composeRule.onNodeWithText("Date difference").assertIsDisplayed()
+    }
+
+    @Test
+    fun tools_home_cards_open_destination() {
+        var opened: ToolDestination? = null
+        composeRule.setContent {
+            ToadCalculatorTheme {
+                ToolsHomeScreen(onOpen = { dest -> opened = dest })
+            }
+        }
+        composeRule.onNodeWithTag(toolCardTag(ToolDestination.BMI)).performClick()
+        assertThat(opened).isEqualTo(ToolDestination.BMI)
+        composeRule.onNodeWithTag(toolCardTag(ToolDestination.DATE_DIFF)).performClick()
+        assertThat(opened).isEqualTo(ToolDestination.DATE_DIFF)
     }
 
     @Test

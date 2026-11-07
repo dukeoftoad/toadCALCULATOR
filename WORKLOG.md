@@ -530,3 +530,65 @@ clickable must not return there.
 re-run — this commit is that re-run (CI triggers on push to main).
 
 ---
+## Phase 9.2 — Tools home redesign — 2026-11-07T02:04:00Z
+
+**Skill:** implement — iterate (owner screenshot feedback: Tools landing page is generic).
+
+Owner sent a real-device screenshot of the Tools home: a bare `ListItem` stack with
+hairline dividers, no icons, no tappable affordance, no hierarchy (title and subtitle
+near-identical weight), and a large dead region below the last row. This is the page
+that had never received the Phase 9 visual pass the calculator got.
+
+**Redesign.**
+- Four tonal cards (`Surface`, shape 20dp, `surfaceContainer` on background — visible
+  in both schemes without a border) replace the divider list. Row padding 16/14dp,
+  12dp gaps, 16dp screen insets; content is vertically centered per card.
+- Leading icon tile: 46dp rounded-square (14dp corners) filled `primaryContainer`
+  with the icon tinted `onPrimaryContainer` — the single green accent of the keypad
+  carried into navigation.
+- Custom stroke-style vector icons (24dp, 1.8dp round strokes) drawn per tool:
+  opposing arrows (converter), heart (BMI), cake with candle (age), calendar with
+  day dots (date difference). Hand-authored paths, no `material-icons-extended`
+  dependency — release size stays untouched.
+- Trailing `Icons.AutoMirrored.Filled.KeyboardArrowRight` in `outline` as the tap
+  affordance (existence verified against the actual BOM-mapped icons-core AAR).
+- Short intro line (`tools_subtitle`) under the bar and a centered brand footnote
+  (`tools_footnote`: "Offline-first · no ads · no tracking") fill the dead space
+  without inventing content.
+- Staggered entrance: one shared `Animatable` drives all four cards through
+  `graphicsLayer` alpha/translationY windows (index*0.08 offset, 380ms,
+  FastOutSlowInEasing). Finite duration → Robolectric idle-waiting is unaffected;
+  alpha/translation never touch semantics, so test tags stay visible (Phase 9.1
+  lesson respected — no clickable/combinedClickable near tagged children; the tag
+  lives on the clickable Surface node itself).
+
+**Files.** `app/src/main/java/com/toadcalculator/ui/tools/ToolCommon.kt`
+(ToolsHomeScreen rewrite + `toolCardTag`/`toolIconRes` helpers),
+`app/src/main/res/drawable/ic_tool_{convert,bmi,age,datadiff}.xml` (new),
+`app/src/main/res/values/strings.xml` (tools_subtitle, tools_footnote),
+`app/src/test/java/com/toadcalculator/ui/ToolsUiTest.kt` (new interaction test).
+
+**Tests.** Added `tools_home_cards_open_destination` — clicking the BMI card sets
+`onOpen(BMI)`, clicking the date-difference card sets `onOpen(DATE_DIFF)` (first
+navigation-callback coverage for this screen). Existing suite unchanged, including
+`tools_home_lists_all_four` (all four titles remain visible; texts now live in
+merged Surface semantics, which `onNodeWithText` matches). Sandbox toolchain was
+wiped between sessions (no local gradle/SDK this time); per standing owner
+instruction CI is the build/test authority for this commit — full module suite,
+assembleRelease (< 4 MiB gate) and the permissions audit run on push.
+
+**Decisions.**
+- Single accent color for all four tiles (not per-tool colors): keeps the toad-green
+  brand unified, matches the keypad's one-filled-accent hierarchy.
+- Vertical full-width cards instead of a 2×2 grid: subtitles are long (converter
+  lists eight domains) and would truncate/underfit in half-width cells.
+- Dots on the calendar icon drawn as filled arc-circles, frame as strokes — verified
+  path geometry by hand; icons render through Compose tint (ColorFilter), so the
+  drawable's own white stroke color is irrelevant.
+- `tool_open_*` test tags preserved verbatim via `toolCardTag()` helper; no
+  AppRoot/navigation changes needed (same `onOpen` contract).
+
+**Open questions.** None.
+
+**Next.** Push → CI; continue iterate loop on owner hardware feedback (other
+screens — settings, history sheet — may deserve the same pass).
