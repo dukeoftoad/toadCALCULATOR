@@ -699,3 +699,26 @@ import); test-manifest dependency already provides the activity under Robolectri
 No assertion change.
 
 **Next.** Push → CI rerun; then tag v1.0.0 + GitHub Release with the signed APK.
+---
+## Phase 9.7 — v1.0.0 signed release published — 2026-11-07T03:25:00Z
+
+**Skill:** document — release handoff.
+
+CI run 42331605210 (d5bd99c) fully green: all module unit tests (incl. the two new
+root-navigation regression tests), debug + signed release assemble, size gate
+(`app-release.apk` — signed — at 1,758,280 bytes vs the 4 MiB limit), zero-permission
+audit. The presence of `app-release.apk` (vs `app-release-unsigned.apk`) confirms the
+signing config applied.
+
+**Published.** Tag `v1.0.0` at d5bd99c; GitHub Release "toadCALCULATOR 1.0.0"
+(release id 437284249) with asset `toadCALCULATOR-1.0.0.apk` (1,758,280 bytes,
+state uploaded). APK pulled from the green CI run's artifact — identical bytes to
+what the gate measured.
+
+**Owner-visible iteration cost this phase.** Three red CI runs before green, all
+toolchain-level slips on untested-locally code (Kotlin DSL `java` namespace,
+missing material3 Icon import + withStyle misuse, wrong compose test rule). Each
+root-caused and logged (9.4–9.6). No product-logic regressions at any point.
+
+**Next.** Iterate on owner hardware feedback: settings/history sheets still carry
+the pre-Phase-9 look if the owner wants the same modern pass.
