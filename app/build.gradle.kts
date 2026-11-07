@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -9,7 +11,7 @@ plugins {
 // Release signing — the personal keystore lives in this private repository
 // (signing/) so CI and local builds produce identical signed APKs with zero
 // secrets setup. Rotate by replacing keystore + signing.properties together.
-val signingProps = java.util.Properties()
+val signingProps = Properties()
 val signingPropsFile = rootProject.file("signing/signing.properties")
 if (signingPropsFile.exists()) {
     signingPropsFile.inputStream().use { signingProps.load(it) }

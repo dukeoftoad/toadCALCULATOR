@@ -655,3 +655,18 @@ owner instruction CI is the build/test authority for this commit.
 
 **Next.** After CI green on this commit: tag `v1.0.0`, create the GitHub Release and
 upload the signed APK as a release asset.
+---
+## Phase 9.4 — CI recovery: Kotlin DSL signing-script fix — 2026-11-07T02:55:00Z
+
+**Skill:** implement — iterate (CI red → root-cause → fix → verify green).
+
+CI run 42330755277 (commit c84e54b) failed at script compilation of
+`app/build.gradle.kts` — `Unresolved reference: util` at 12:25. Root cause: inside
+`.gradle.kts` scripts the bare name `java` resolves to the plugins' `java { }`
+extension accessor, not the `java.*` package, so `java.util.Properties()` does not
+compile there. Fix: top-of-file `import java.util.Properties` + bare `Properties()`
+constructor — the standard Gradle Kotlin DSL pattern. One line of behavior, zero
+signing-logic change. No test touched; the suite never ran (script compile is the
+first gate).
+
+**Next.** Push fix → CI rerun of the full Phase 9.3 change set.
