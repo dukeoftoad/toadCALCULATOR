@@ -1,31 +1,47 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+<!--
+  toadCALCULATOR launcher foreground — the toad.
+  Hand-authored geometry on the 108dp adaptive canvas; every point stays inside
+  the 66dp adaptive safe zone (circle r=33 around 54,54). The toad: crowned
+  head with two eye bumps, wide bulging cheeks, subtle front feet, big smile.
+-->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
 
-    <!-- Calculator body (centered inside the 66dp adaptive safe zone). -->
+    <!-- Body silhouette (white): crown top, bulging sides, flat bottom. -->
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M40,30 h28 a5,5 0 0 1 5,5 v38 a5,5 0 0 1 -5,5 h-28 a5,5 0 0 1 -5,-5 v-38 a5,5 0 0 1 5,-5 z" />
+        android:pathData="M38,46 C44,40.5 64,40.5 70,46 C78,50 78,66 70,71 C64,76 44,76 38,71 C30,66 30,50 38,46 Z" />
 
-    <!-- Display. -->
+    <!-- Eye bumps merge into the crown. -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M36,43 a6,6 0 1,0 12,0 a6,6 0 1,0 -12,0 M60,43 a6,6 0 1,0 12,0 a6,6 0 1,0 -12,0" />
+
+    <!-- Front feet peeking under the body. -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M38.5,75 A6.5,3 0 1,0 51.5,75 A6.5,3 0 1,0 38.5,75 M56.5,75 A6.5,3 0 1,0 69.5,75 A6.5,3 0 1,0 56.5,75" />
+
+    <!-- Pupils. -->
     <path
         android:fillColor="#1B2A13"
-        android:pathData="M41,36 h26 v9 h-26 z" />
+        android:pathData="M39.3,42.5 a2.7,2.7 0 1,0 5.4,0 a2.7,2.7 0 1,0 -5.4,0 M63.3,42.5 a2.7,2.7 0 1,0 5.4,0 a2.7,2.7 0 1,0 -5.4,0" />
 
-    <!-- Keypad dots: 3 columns x 3 rows. -->
+    <!-- Nostrils. -->
     <path
         android:fillColor="#1B2A13"
-        android:pathData="M43,53 a2.4,2.4 0 1 0 4.8,0 a2.4,2.4 0 1 0 -4.8,0 z
-             M51.6,53 a2.4,2.4 0 1 0 4.8,0 a2.4,2.4 0 1 0 -4.8,0 z
-             M60.2,53 a2.4,2.4 0 1 0 4.8,0 a2.4,2.4 0 1 0 -4.8,0 z
-             M43,61.5 a2.4,2.4 0 1 0 4.8,0 a2.4,2.4 0 1 0 -4.8,0 z
-             M51.6,61.5 a2.4,2.4 0 1 0 4.8,0 a2.4,2.4 0 1 0 -4.8,0 z
-             M60.2,61.5 a2.4,2.4 0 1 0 4.8,0 a2.4,2.4 0 1 0 -4.8,0 z
-             M43,70 a2.4,2.4 0 1 0 4.8,0 a2.4,2.4 0 1 0 -4.8,0 z
-             M51.6,70 a2.4,2.4 0 1 0 4.8,0 a2.4,2.4 0 1 0 -4.8,0 z
-             M60.2,70 a2.4,2.4 0 1 0 4.8,0 a2.4,2.4 0 1 0 -4.8,0 z" />
+        android:pathData="M48.3,52.5 a1.2,1.2 0 1,0 2.4,0 a1.2,1.2 0 1,0 -2.4,0 M57.3,52.5 a1.2,1.2 0 1,0 2.4,0 a1.2,1.2 0 1,0 -2.4,0" />
+
+    <!-- The wide toad smile. -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#1B2A13"
+        android:strokeWidth="3"
+        android:strokeLineCap="round"
+        android:pathData="M42,61.5 Q54,70.5 66,61.5" />
 </vector>

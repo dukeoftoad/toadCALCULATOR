@@ -6,6 +6,15 @@ plugins {
     alias(libs.plugins.kotlin.compose)
 }
 
+// Release signing — the personal keystore lives in this private repository
+// (signing/) so CI and local builds produce identical signed APKs with zero
+// secrets setup. Rotate by replacing keystore + signing.properties together.
+val signingProps = java.util.Properties()
+val signingPropsFile = rootProject.file("signing/signing.properties")
+if (signingPropsFile.exists()) {
+    signingPropsFile.inputStream().use { signingProps.load(it) }
+}
+
 android {
     namespace = "com.toadcalculator"
     compileSdk = 36
@@ -18,6 +27,17 @@ android {
         versionName = "1.0.0"
     }
 
+    signingConfigs {
+        if (signingPropsFile.exists()) {
+            create("release") {
+                storeFile = rootProject.file(signingProps.getProperty("storeFile"))
+                storePassword = signingProps.getProperty("storePassword")
+                keyAlias = signingProps.getProperty("keyAlias")
+                keyPassword = signingProps.getProperty("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true
@@ -26,7 +46,9 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
             )
-            // No signing config: CI produces an unsigned release APK.
+            if (signingPropsFile.exists()) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
     }
 

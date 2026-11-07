@@ -2,5 +2,5 @@
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 <resources>
     <color name="splash_background">#F9FAF3</color>
-    <color name="ic_launcher_background">#386A20</color>
+    <color name="ic_launcher_background">#3E6B1E</color>
 </resources>
