@@ -670,3 +670,18 @@ signing-logic change. No test touched; the suite never ran (script compile is th
 first gate).
 
 **Next.** Push fix → CI rerun of the full Phase 9.3 change set.
+---
+## Phase 9.5 — CI recovery: AboutSheet compile fix — 2026-11-07T03:05:00Z
+
+**Skill:** implement — iterate (CI red → root-cause → fix → verify green).
+
+CI run for 0a75352 cleared the script-compile gate but failed `:app:compileDebugKotlin`
+with three errors, all in the Phase 9.3 AboutSheet rework in `SettingsScreen.kt`:
+`Unresolved reference 'Icon'` (material3 Icon used without import) and
+`withStyle(fontWeight = …)` (named-argument misuse — `withStyle` takes a `SpanStyle`,
+which also dragged the `stringResource` inside into a non-composable-context error).
+Fix: add `androidx.compose.material3.Icon` import; wrap the second span in
+`SpanStyle(fontWeight = FontWeight.Bold)`. No logic change; wordmark renders as
+intended (green "toad" + bold "CALCULATOR").
+
+**Next.** Push → CI rerun; then tag v1.0.0 + GitHub Release with the signed APK.
