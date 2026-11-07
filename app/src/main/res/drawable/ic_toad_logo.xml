@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+<!--
+  Standalone toad brand mark (in-app signature, About sheet).
+  Bright toad-green body so it pops on both light paper and OLED dark surfaces;
+  same geometry as the launcher toad on a 108 viewport (transparent background).
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <path
+        android:fillColor="#A8DE7B"
+        android:pathData="M38,46 C44,40.5 64,40.5 70,46 C78,50 78,66 70,71 C64,76 44,76 38,71 C30,66 30,50 38,46 Z" />
+
+    <path
+        android:fillColor="#A8DE7B"
+        android:pathData="M36,43 a6,6 0 1,0 12,0 a6,6 0 1,0 -12,0 M60,43 a6,6 0 1,0 12,0 a6,6 0 1,0 -12,0" />
+
+    <path
+        android:fillColor="#A8DE7B"
+        android:pathData="M38.5,75 A6.5,3 0 1,0 51.5,75 A6.5,3 0 1,0 38.5,75 M56.5,75 A6.5,3 0 1,0 69.5,75 A6.5,3 0 1,0 56.5,75" />
+
+    <path
+        android:fillColor="#1B2A13"
+        android:pathData="M39.3,42.5 a2.7,2.7 0 1,0 5.4,0 a2.7,2.7 0 1,0 -5.4,0 M63.3,42.5 a2.7,2.7 0 1,0 5.4,0 a2.7,2.7 0 1,0 -5.4,0" />
+
+    <path
+        android:fillColor="#1B2A13"
+        android:pathData="M48.3,52.5 a1.2,1.2 0 1,0 2.4,0 a1.2,1.2 0 1,0 -2.4,0 M57.3,52.5 a1.2,1.2 0 1,0 2.4,0 a1.2,1.2 0 1,0 -2.4,0" />
+
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#1B2A13"
+        android:strokeWidth="3"
+        android:strokeLineCap="round"
+        android:pathData="M42,61.5 Q54,70.5 66,61.5" />
+</vector>

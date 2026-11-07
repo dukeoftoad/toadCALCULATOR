@@ -2,6 +2,7 @@
 
 package com.toadcalculator.ui
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
@@ -103,6 +104,19 @@ private fun AppScaffold(settingsViewModel: SettingsViewModel) {
     val settingsCd = stringResource(R.string.cd_open_settings)
     val toolsCd = stringResource(R.string.cd_open_tools)
     val backCd = stringResource(R.string.cd_back)
+
+    // System back (gesture/button): drill back through tool → tools home →
+    // calculator, mirroring the top-bar arrow. Without this the gesture closed
+    // the whole app from any screen. Disabled at the calculator root so the
+    // default (exit) still applies there.
+    BackHandler(enabled = screen != AppScreen.CALCULATOR) {
+        if (screen == AppScreen.TOOLS && activeTool != null) {
+            activeTool = null
+        } else {
+            screen = AppScreen.CALCULATOR
+            activeTool = null
+        }
+    }
 
     Scaffold(
         topBar = {

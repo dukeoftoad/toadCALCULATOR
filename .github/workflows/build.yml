@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # toadCALCULATOR CI — build, test, size-limit, permission audit.
-# Requires no secrets. Never publishes anywhere.
+# Requires no secrets (release signing comes from the committed personal
+# keystore in signing/). Never publishes anywhere.
 name: build
 
 on:
@@ -36,10 +37,10 @@ jobs:
 
       - name: Enforce release APK size limit (4 MiB)
         run: |
-          APK=app/build/outputs/apk/release/app-release-unsigned.apk
+          APK=$(ls -1 app/build/outputs/apk/release/*.apk | head -n1)
           SIZE=$(stat -c%s "$APK")
           LIMIT=4194304
-          echo "Release APK size: ${SIZE} bytes (limit ${LIMIT})"
+          echo "Release APK (${APK}) size: ${SIZE} bytes (limit ${LIMIT})"
           if [ "$SIZE" -gt "$LIMIT" ]; then
             echo "::error::Release APK is ${SIZE} bytes, exceeds ${LIMIT} bytes (4 MiB)."
             exit 1
@@ -57,7 +58,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: toadCALCULATOR-release
-          path: app/build/outputs/apk/release/app-release-unsigned.apk
+          path: app/build/outputs/apk/release/*.apk
           retention-days: 30
           if-no-files-found: error
 
@@ -82,7 +83,7 @@ jobs:
 
       - name: Print merged manifest permission list
         run: |
-          APK=app/build/outputs/apk/release/app-release-unsigned.apk
+          APK=$(ls -1 app/build/outputs/apk/release/*.apk | head -n1)
           AAPT2=$(ls -1 "$ANDROID_HOME"/build-tools/*/aapt2 | sort -V | tail -n 1)
           echo "=== merged manifest permissions of $APK ==="
           PERMS=$("$AAPT2" dump permissions "$APK")

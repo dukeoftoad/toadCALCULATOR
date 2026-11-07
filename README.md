@@ -4,7 +4,7 @@
 
 A personal, offline-first Android calculator. **Zero permissions, zero ads, zero tracking, zero network access.**
 
-- **Status:** feature-complete through Phase 7 (see [WORKLOG.md](WORKLOG.md) for the phase-by-phase handoff log).
+- **Status:** feature-complete through Phase 9.3 — modern toad identity, signed release APKs, offline tools. Phase-by-phase handoff in [WORKLOG.md](WORKLOG.md).
 
 ## Features
 

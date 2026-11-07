@@ -592,3 +592,66 @@ assembleRelease (< 4 MiB gate) and the permissions audit run on push.
 
 **Next.** Push → CI; continue iterate loop on owner hardware feedback (other
 screens — settings, history sheet — may deserve the same pass).
+## Phase 9.3 — toad identity, audit fixes, signed release, back-gesture bug — 2026-11-07T03:10:00Z
+
+**Skill:** implement — iterate (owner: "Craft toad logo, toad icon and other feature for
+signature of toad. Fix the flaws you have found during audit, release signed apk, swipe
+back from converter got closed instead of coming to back home tab fix it").
+
+**Bug (back gesture).** Root navigation is plain state (`screen`, `activeTool`) — no
+`BackHandler` was ever registered, so the Android system-back gesture / button from any
+non-calculator screen finished the activity instead of drilling back. Fix:
+`BackHandler(enabled = screen != CALCULATOR)` in AppScaffold — tool → tools home →
+calculator, mirroring the top-bar arrow; at the calculator root the handler is disabled
+so default exit still applies. Manifest gained `android:enableOnBackInvokedCallback="true"`
+(targetSdk 36 predictive back goes through the same androidx dispatcher). Regression
+cover: new `AppRootUiTest` composes the real AppRoot (Room/DataStore on Robolectric via
+the app graph) and drives the actual `onBackPressedDispatcher` — converter → back →
+tools home, tools home → back → calculator.
+
+**Toad identity (hand-authored vectors, no binary assets).**
+- `ic_launcher_foreground.xml` replaced with the toad: crowned head, two eye bumps,
+  wide cheeks, front feet, big smile — geometry hand-computed to stay inside the 66dp
+  adaptive safe zone (all points ≤ ~26dp from center 54,54). White body + #1B2A13
+  details on the `ic_launcher_background` green, retuned from #386A20 to the exact
+  brand `LightPrimary` #3E6B1E. Same drawable serves as monochrome layer (alpha-based)
+  and as the splash animated icon, so launcher/splash/themed icon stay one signature.
+- `ic_toad_logo.xml`: standalone bright-green toad mark for in-app use.
+- About sheet is now the in-app signature moment: 56dp toad mark over the
+  green-`toad`/bold-`CALCULATOR` wordmark, centered, privacy line promoted to bodyMedium.
+
+**Audit fixes.**
+- Typography: `titleMedium` (16/24 w500), `bodyMedium` (14/20), `bodySmall` (12/16)
+  were referenced by Phase 9.2 UI but never defined — silently falling back to M3
+  defaults. Now explicit tokens.
+- CI workflow hardcoded `app-release-unsigned.apk` in three places (size gate,
+  artifact upload, permissions audit) — would break the moment signing changed the
+  output name. Replaced with globbed APK resolution.
+
+**Signed release.**
+- Generated `signing/toadcalculator-release.keystore` (RSA 2048, validity 10950 days,
+  alias `toadcalculator`, SHA-256 40:9D:43:46:64:77:04:7E:10:F9:3F:09:04:7D:86:DC:1D:
+  24:23:B8:A4:DA:65:26:71:12:91:31:E2:A0:D1:82).
+- `signing/signing.properties` (store password, alias, key password) sits next to it;
+  both committed to this **private** repository so CI and local builds sign identically
+  with zero secret plumbing. Trade-off accepted deliberately: for a personal offline
+  app, recoverability outranks keystore secrecy; rotate by replacing both files.
+- `app/build.gradle.kts` reads the properties and wires `signingConfig` on release
+  when present; absent the file the build falls back to unsigned (still green).
+
+**Files.** `app/src/main/res/drawable/ic_launcher_foreground.xml`, `ic_toad_logo.xml`,
+`app/src/main/res/values/colors.xml`, `AndroidManifest.xml`,
+`app/src/main/java/com/toadcalculator/ui/AppRoot.kt` (BackHandler),
+`ui/theme/Type.kt`, `ui/settings/SettingsScreen.kt` (AboutSheet),
+`app/build.gradle.kts`, `.github/workflows/build.yml`,
+`app/src/test/java/com/toadcalculator/ui/AppRootUiTest.kt` (new),
+`signing/*` (new), `WORKLOG.md`, README.md.
+
+**Tests.** Added 2 root-navigation regression tests (the reported bug). No existing
+assertion changed. Sandbox has no Android toolchain this session (wiped); per standing
+owner instruction CI is the build/test authority for this commit.
+
+**Open questions.** None.
+
+**Next.** After CI green on this commit: tag `v1.0.0`, create the GitHub Release and
+upload the signed APK as a release asset.
