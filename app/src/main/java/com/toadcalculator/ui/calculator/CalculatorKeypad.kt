@@ -39,6 +39,9 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.TextUnit
@@ -83,6 +86,16 @@ private val SCI_SECONDARY_ROWS: List<List<KeypadKey>> = listOf(
 
 private val SCI_CONSTANT_ROW: List<KeypadKey> = listOf(
     KeypadKey.Pi, KeypadKey.E, KeypadKey.Percent, KeypadKey.Square,
+)
+
+/**
+ * Memory + last-answer row (Phase 9.8). Lives in the scientific block so the
+ * basic 5×4 keypad — and its viewport budget — stays unchanged. MC/MR/M+/M−
+ * operate on the calculator memory; Ans recalls the last successful result.
+ */
+private val MEMORY_ROW: List<KeypadKey> = listOf(
+    KeypadKey.MemoryClear, KeypadKey.MemoryRecall,
+    KeypadKey.MemoryPlus, KeypadKey.MemoryMinus, KeypadKey.Ans,
 )
 
 /** Visual spec per key tier: container, content, label size, label weight. */
@@ -180,6 +193,17 @@ private fun ScientificBlock(
             SecondChip(state = state, onClick = { performKey(KeypadKey.Second) }, modifier = Modifier.weight(1f))
             AngleChip(state = state, onClick = { performKey(KeypadKey.AngleToggle) }, modifier = Modifier.weight(1f))
         }
+        // Memory + Ans row — always visible while the scientific pad is open.
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            MEMORY_ROW.forEach { key ->
+                KeypadButton(
+                    key = key,
+                    onClick = { performKey(key) },
+                    height = 50.dp,
+                    modifier = Modifier.weight(1f),
+                )
+            }
+        }
         Crossfade(targetState = state.secondMode, label = "sci-functions") { second ->
             val rows = if (second) SCI_SECONDARY_ROWS else SCI_PRIMARY_ROWS
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -231,6 +255,8 @@ private fun SecondChip(state: CalculatorUiState, onClick: () -> Unit, modifier: 
         modifier = modifier.testTag(CalcTags.key(KeypadKey.Second) + "_chip"),
         container = if (state.secondMode) s.primary else s.surfaceContainerHigh,
         content = if (state.secondMode) s.onPrimary else s.onSurfaceVariant,
+        // B16: expose the toggle state to TalkBack as a checked switch.
+        selected = state.secondMode,
     )
 }
 
@@ -242,12 +268,20 @@ private fun PillChip(
     modifier: Modifier = Modifier,
     container: Color,
     content: Color,
+    /** When non-null, the chip is announced as a checked switch (B16). */
+    selected: Boolean? = null,
 ) {
     Surface(
         onClick = onClick,
         modifier = modifier
             .height(48.dp)
-            .semantics { this.contentDescription = label },
+            .semantics {
+                this.contentDescription = label
+                if (selected != null) {
+                    this.role = Role.Switch
+                    this.selected = selected
+                }
+            },
         shape = RoundedCornerShape(50),
         color = container,
         contentColor = content,
@@ -298,10 +332,7 @@ fun KeypadButton(
     height: androidx.compose.ui.unit.Dp = 56.dp,
 ) {
     val style = styleFor(key)
-    val label = when (key) {
-        KeypadKey.AngleToggle -> "DEG"
-        else -> key.display
-    }
+    val label = key.display
     val cd = when (key) {
         KeypadKey.Clear -> stringResource(R.string.cd_key_clear)
         KeypadKey.Backspace -> stringResource(R.string.cd_key_backspace)
@@ -329,6 +360,11 @@ fun KeypadButton(
         KeypadKey.Cbrt -> stringResource(R.string.cd_key_cbrt)
         KeypadKey.Abs -> stringResource(R.string.cd_key_abs)
         KeypadKey.Percent -> stringResource(R.string.cd_key_percent)
+        KeypadKey.MemoryClear -> stringResource(R.string.cd_key_mc)
+        KeypadKey.MemoryRecall -> stringResource(R.string.cd_key_mr)
+        KeypadKey.MemoryPlus -> stringResource(R.string.cd_key_mplus)
+        KeypadKey.MemoryMinus -> stringResource(R.string.cd_key_mminus)
+        KeypadKey.Ans -> stringResource(R.string.cd_key_ans)
         is KeypadKey.Digit -> stringResource(R.string.cd_key_digit, label)
         KeypadKey.Plus -> stringResource(R.string.cd_key_plus)
         KeypadKey.Minus -> stringResource(R.string.cd_key_minus)

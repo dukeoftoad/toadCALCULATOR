@@ -6,18 +6,21 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -76,75 +79,77 @@ fun SettingsScreen(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        PreferenceLabel(stringResource(R.string.settings_theme))
-        ChipRow {
-            ThemeMode.entries.forEach { mode ->
-                FilterChip(
-                    selected = state.theme == mode,
-                    onClick = { onTheme(mode) },
-                    label = { Text(themeLabel(mode)) },
-                    modifier = Modifier.testTag(SettingsTags.theme(mode)),
+        // Phase 9.8 modern pass: each preference is a tonal card (mirroring the
+        // tools home) instead of bare labels separated by low-contrast dividers.
+        SettingsCard(stringResource(R.string.settings_theme)) {
+            ChipRow {
+                ThemeMode.entries.forEach { mode ->
+                    FilterChip(
+                        selected = state.theme == mode,
+                        onClick = { onTheme(mode) },
+                        label = { Text(themeLabel(mode)) },
+                        modifier = Modifier.testTag(SettingsTags.theme(mode)),
+                    )
+                }
+            }
+        }
+
+        SettingsCard(stringResource(R.string.settings_precision)) {
+            ChipRow {
+                listOf(6, 8, 10, 12, 15).forEach { p ->
+                    FilterChip(
+                        selected = state.precision == p,
+                        onClick = { onPrecision(p) },
+                        label = { Text(p.toString()) },
+                        modifier = Modifier.testTag(SettingsTags.precision(p)),
+                    )
+                }
+            }
+        }
+
+        SettingsCard(stringResource(R.string.settings_angle_mode)) {
+            ChipRow {
+                AngleModePref.entries.forEach { a ->
+                    FilterChip(
+                        selected = state.angleMode == a,
+                        onClick = { onAngleMode(a) },
+                        label = { Text(a.name) },
+                        modifier = Modifier.testTag(SettingsTags.angle(a)),
+                    )
+                }
+            }
+        }
+
+        SettingsCard(stringResource(R.string.settings_haptics)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Spacer(Modifier.weight(1f))
+                Switch(
+                    checked = state.haptics,
+                    onCheckedChange = onHaptics,
+                    modifier = Modifier.testTag(SettingsTags.HAPTICS),
                 )
             }
         }
 
-        HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
-
-        PreferenceLabel(stringResource(R.string.settings_precision))
-        ChipRow {
-            listOf(6, 8, 10, 12, 15).forEach { p ->
-                FilterChip(
-                    selected = state.precision == p,
-                    onClick = { onPrecision(p) },
-                    label = { Text(p.toString()) },
-                    modifier = Modifier.testTag(SettingsTags.precision(p)),
-                )
+        SettingsCard(stringResource(R.string.settings_about)) {
+            Column {
+                TextButton(
+                    onClick = { confirmClear = true },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag(SettingsTags.CLEAR_HISTORY),
+                ) { Text(stringResource(R.string.settings_clear_history)) }
+                TextButton(
+                    onClick = { showAbout = true },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag(SettingsTags.ABOUT),
+                ) { Text(stringResource(R.string.settings_about)) }
             }
         }
-
-        HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
-
-        PreferenceLabel(stringResource(R.string.settings_angle_mode))
-        ChipRow {
-            AngleModePref.entries.forEach { a ->
-                FilterChip(
-                    selected = state.angleMode == a,
-                    onClick = { onAngleMode(a) },
-                    label = { Text(a.name) },
-                    modifier = Modifier.testTag(SettingsTags.angle(a)),
-                )
-            }
-        }
-
-        HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                text = stringResource(R.string.settings_haptics),
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.weight(1f),
-            )
-            Switch(
-                checked = state.haptics,
-                onCheckedChange = onHaptics,
-                modifier = Modifier.testTag(SettingsTags.HAPTICS),
-            )
-        }
-
-        HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
-
-        TextButton(
-            onClick = { confirmClear = true },
-            modifier = Modifier.testTag(SettingsTags.CLEAR_HISTORY),
-        ) { Text(stringResource(R.string.settings_clear_history)) }
-
-        TextButton(
-            onClick = { showAbout = true },
-            modifier = Modifier.testTag(SettingsTags.ABOUT),
-        ) { Text(stringResource(R.string.settings_about)) }
     }
 
     if (confirmClear) {
@@ -243,6 +248,25 @@ private fun PreferenceLabel(text: String) {
         style = MaterialTheme.typography.labelLarge,
         color = MaterialTheme.colorScheme.primary,
     )
+}
+
+/** A tonal card grouping one preference — the settings analogue of a tool card. */
+@Composable
+private fun SettingsCard(
+    title: String,
+    content: @Composable () -> Unit,
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        color = MaterialTheme.colorScheme.surfaceContainer,
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            PreferenceLabel(title)
+            Spacer(Modifier.height(10.dp))
+            content()
+        }
+    }
 }
 
 @Composable

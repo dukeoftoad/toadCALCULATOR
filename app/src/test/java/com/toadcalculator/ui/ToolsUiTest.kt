@@ -11,6 +11,7 @@ import androidx.compose.ui.test.performTextReplacement
 import com.google.common.truth.Truth.assertThat
 import com.toadcalculator.ui.tools.BmiScreen
 import com.toadcalculator.ui.tools.DateDiffScreen
+import com.toadcalculator.ui.tools.PercentScreen
 import com.toadcalculator.ui.tools.ToolDestination
 import com.toadcalculator.ui.tools.ToolTags
 import com.toadcalculator.ui.tools.ToolsHomeScreen
@@ -31,7 +32,7 @@ class ToolsUiTest {
     val composeRule = createComposeRule()
 
     @Test
-    fun tools_home_lists_all_four() {
+    fun tools_home_lists_all_five() {
         composeRule.setContent {
             ToadCalculatorTheme { ToolsHomeScreen(onOpen = {}) }
         }
@@ -39,6 +40,7 @@ class ToolsUiTest {
         composeRule.onNodeWithText("BMI").assertIsDisplayed()
         composeRule.onNodeWithText("Age").assertIsDisplayed()
         composeRule.onNodeWithText("Date difference").assertIsDisplayed()
+        composeRule.onNodeWithText("Percentage").assertIsDisplayed()
     }
 
     @Test
@@ -94,5 +96,15 @@ class ToolsUiTest {
         composeRule.onNodeWithText("364 days").assertIsDisplayed()
         composeRule.onNodeWithTag("tool_diff_inclusive").performClick()
         composeRule.onNodeWithText("365 days").assertIsDisplayed()
+    }
+
+    @Test
+    fun percent_tool_default_of_total_mode() {
+        composeRule.setContent {
+            ToadCalculatorTheme { PercentScreen() }
+        }
+        // Defaults: a=25, b=200, OF_TOTAL → 25 is 12.5% of 200.
+        composeRule.onNodeWithTag(ToolTags.PERCENT_RESULT).assertIsDisplayed()
+        composeRule.onNodeWithText("12.5").assertIsDisplayed()
     }
 }

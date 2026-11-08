@@ -59,8 +59,11 @@ fun BmiScreen(modifier: Modifier = Modifier) {
     }
 
     val bmiValue = if (heightMeters != null && weightKg != null) Bmi.bmi(heightMeters, weightKg) else Double.NaN
-    val category = Bmi.category(bmiValue)
-    val healthy = if (heightMeters != null && !heightMeters.isNaN()) Bmi.healthyWeightRangeKg(heightMeters) else null
+    // B4: only classify a real BMI — NaN must not render a misleading
+    // "Underweight" label beneath the "—" placeholder.
+    val category = if (!bmiValue.isNaN()) Bmi.category(bmiValue) else null
+    // B5: guard against height ≤ 0 (would yield a 0.0–0.0 kg "healthy" range).
+    val healthy = if (heightMeters != null && heightMeters > 0) Bmi.healthyWeightRangeKg(heightMeters) else null
 
     Column(
         modifier = modifier
@@ -143,10 +146,12 @@ fun BmiScreen(modifier: Modifier = Modifier) {
                 style = MaterialTheme.typography.displayLarge,
                 color = MaterialTheme.colorScheme.primary,
             )
-            Text(
-                text = categoryLabel(category),
-                style = MaterialTheme.typography.titleLarge,
-            )
+            if (category != null) {
+                Text(
+                    text = categoryLabel(category),
+                    style = MaterialTheme.typography.titleLarge,
+                )
+            }
             if (healthy != null) {
                 ResultLine(
                     label = stringResource(R.string.tool_healthy_range),
