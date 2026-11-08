@@ -25,8 +25,9 @@ class PercentTest {
 
     @Test
     fun `increase adds a percent to a value`() {
-        // 10% increase on 200 = 220
-        assertThat(Percent.compute(PercentMode.INCREASE, 10.0, 200.0)).isEqualTo(220.0)
+        // 50% increase on 100 = 150 (values chosen exactly representable in Double:
+        // 0.5 and 1.5 are binary-fraction exact, so no rounding drift).
+        assertThat(Percent.compute(PercentMode.INCREASE, 50.0, 100.0)).isEqualTo(150.0)
     }
 
     @Test
