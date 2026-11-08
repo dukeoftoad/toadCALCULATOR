@@ -874,8 +874,13 @@ tests and all core-math tests passed on the first red run.
 **Open questions.** None blocking. The deferred items (esp. B6/N5 haptic strength
 and B14 signing) are owner decisions for a future phase.
 
-**Next.** CI is green on d58085a. Tag `v1.1.0` at d58085a and cut a GitHub
-Release with the signed `app-release.apk` (artifact `toadCALCULATOR-release`
-from run 42453575638, 1,766,344 bytes). Then iterate on owner hardware feedback
-— the deferred items (esp. B6/N5 haptic strength and F2 staggered entrances)
-are the next candidates.
+**Published.** Tag `v1.1.0` at d58085a; GitHub Release 438071553
+("toadCALCULATOR 1.1.0") with signed asset `toadCALCULATOR-1.1.0.apk`
+(1,766,344 bytes, pulled from the green run's `toadCALCULATOR-release`
+artifact). Download: `https://github.com/dukeoftoad/toadCALCULATOR/releases/
+download/v1.1.0/toadCALCULATOR-1.1.0.apk`.
+
+**Next.** Iterate on owner hardware feedback. Deferred candidates for v1.2.0:
+B6/N5 (haptic strength — needs the `SettingsRepository` interface rewrite +
+custom long-press gesture), N2 (programmer/hex mode — L-sized), F2 staggered
+entrances for history/settings, F20 translations, F21 lint in CI.
