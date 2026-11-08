@@ -884,3 +884,80 @@ download/v1.1.0/toadCALCULATOR-1.1.0.apk`.
 B6/N5 (haptic strength — needs the `SettingsRepository` interface rewrite +
 custom long-press gesture), N2 (programmer/hex mode — L-sized), F2 staggered
 entrances for history/settings, F20 translations, F21 lint in CI.
+---
+
+## Phase 9.9 — launcher icon redesign: "the Calculator-Toad" — 2026-11-08T07:45:00Z
+
+**Skill:** implement — design (owner: "design new icon for this app — think
+different and craft the unique; check other toad apps on my account for icons
+already established").
+
+**Family research.** Pulled the launcher iconography of every sibling app on the
+account via the GitHub contents API: toadPLAYER (rich frog character + orange
+headphones on navy), toadFILES (toad peeking out of a folder; v1.11 mark reuses
+family colors #4C7A3F / #A9D48C / #16240F and ships a 30-variant icon switcher),
+toadGALLERY (abstract white gallery-frame glyph), toadNOTES (gradient rounded
+square + document SVG). The family signature: the toad fuses with the app's
+domain object (toad-in-folder, toad-with-headphones).
+
+**Concept.** "The Calculator-Toad" — push the fusion to its logical extreme:
+the calculator device IS the toad. A rounded calculator body doubles as the
+face; two bulging eye bumps sit on top; the dark display (with a white "=")
+takes the snout's place; the wide family smile sits below; a 2×3 keypad whose
+keys double as toad spots fills the chin; front feet peek under the body so it
+reads creature, not appliance. Pupils are shifted down-inward — the toad is
+reading its own display. This is deliberately NOT the v1.0 white-silhouette
+toad, and not a toad beside a calculator.
+
+**Color decisions.** Eye bumps share the body green (#A9D48C, the family belly
+tone) instead of white: rendering comparisons proved white sclera melts into
+the cream splash background (#F9FAF3) — the splash draws this same drawable —
+while the one-silhouette-plus-ink treatment reads on both the brand-green
+launcher background and the splash, and matches the toadFILES mark's language.
+Ink is the family #1B2A13; key green #4C7A3F is the toadFILES body tone; white
+survives only as the "=" accent. Body/eye green stays #A9D48C on the #3E6B1E
+`ic_launcher_background`, unchanged.
+
+**Monochrome done properly.** v1.0 reused the foreground as the monochrome
+layer, which alpha-tints into a featureless silhouette. New dedicated
+`ic_launcher_monochrome.xml`: the display, the smile band and the six keys are
+punched out of the body with `fillType="evenOdd"` (transparent holes), pupils
+are punched out of the eye bumps, and the "=" stays opaque to float inside the
+display hole — themed icons keep the full face.
+
+**Verification (no Android toolchain — rendered instead).** Geometry was
+authored once in a Python script that emits the exact SVG preview from the same
+path strings that go into the XML; iterated v1→v4 on rendered output (fixed:
+icon too small on canvas, eyes detached from body, "toaster" read → feet added,
+key-dots glued to the edge, mono evenOdd feet/body overlap artifact, splash
+white-eye melt). Safe zone verified numerically: every extreme point ≤ 30.2dp
+from center (54,54) vs the 66dp zone's r=33. Final check rendered the SHIPPED
+XML files themselves (parsed via ElementTree, which also proves well-formedness)
+through cairosvg in all three contexts: launcher, splash, monochrome — all
+correct; 48px legibility confirmed.
+
+**Files.** `res/drawable/ic_launcher_foreground.xml` (rewritten),
+`res/drawable/ic_launcher_monochrome.xml` (new),
+`res/drawable/ic_toad_logo.xml` (About-sheet mark → same identity, bright
+#A8DE7B body), `mipmap-anydpi-v26/ic_launcher.xml` +
+`ic_launcher_round.xml` (monochrome → new drawable). The splash icon picks up
+the new foreground automatically (`windowSplashScreenAnimatedIcon` already
+points at it). No Kotlin/test changes — zero behavior risk.
+
+**Tests.** None added (pure resources). CI gates unchanged; watch the release
+size delta (v1.1.0: 1,766,344 bytes; two new small vectors ≈ +4 KB).
+
+**Decisions.**
+- Hand-authored vectors, no binary assets — keeps the repo's no-bitmaps rule
+  and the APK tiny; AI image generation was rejected (bitmap output does not
+  fit adaptive-icon requirements or the 4 MiB gate discipline).
+- One foreground for launcher + splash (the 9.3 "one signature" rule) forced
+  the eye-color decision; a splash-specific variant was considered and dropped.
+- Green eyes over white: correctness on the splash beats extra pop on the
+  launcher, and it is the more family-true look.
+
+**Open questions.** None.
+
+**Next.** Push → CI (resources-only change; expect green on first run). If the
+owner wants variants later, toadFILES' icon-switcher pattern (per-palette
+mipmap files + alias activity) is the established in-family blueprint.

@@ -1,10 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 <!--
-  toadCALCULATOR launcher foreground — the toad.
-  Hand-authored geometry on the 108dp adaptive canvas; every point stays inside
-  the 66dp adaptive safe zone (circle r=33 around 54,54). The toad: crowned
-  head with two eye bumps, wide bulging cheeks, subtle front feet, big smile.
+  toadCALCULATOR launcher foreground — "the Calculator-Toad" (v1.1 identity).
+  Think-different take on the toad family signature (toadFILES fuses the toad
+  with a folder; here the CALCULATOR ITSELF is the toad): a rounded calculator
+  body doubles as the toad face — two bulging eye bumps on top, a dark display
+  with a white "=" where the snout would be, the wide family smile, and a 2×3
+  keypad whose keys double as toad spots, with front feet peeking underneath.
+  Eye bumps share the body green (one silhouette + ink features, the toadFILES
+  family language) so the same drawable stays legible on the brand-green
+  launcher background AND on the cream splash background.
+  Hand-authored geometry on the 108dp adaptive canvas; every extreme point is
+  ≤ 30.2dp from the center (54,54) — inside the 66dp adaptive safe zone.
+  The dark display / "=" / smile / keys / pupils use the family ink #1B2A13;
+  body green #A9D48C is the family belly tone; key green #4C7A3F the family
+  toad-body tone (both from the toadFILES mark).
 -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
@@ -12,36 +22,55 @@
     android:viewportWidth="108"
     android:viewportHeight="108">
 
-    <!-- Body silhouette (white): crown top, bulging sides, flat bottom. -->
+    <!-- Front feet peeking under the body — creature, not appliance. -->
     <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M38,46 C44,40.5 64,40.5 70,46 C78,50 78,66 70,71 C64,76 44,76 38,71 C30,66 30,50 38,46 Z" />
+        android:fillColor="#A9D48C"
+        android:pathData="M42.5,78.2 m-6.5,0 a6.5,2.4 0 1,0 13,0 a6.5,2.4 0 1,0 -13,0 M65.5,78.2 m-6.5,0 a6.5,2.4 0 1,0 13,0 a6.5,2.4 0 1,0 -13,0" />
 
-    <!-- Eye bumps merge into the crown. -->
+    <!-- Calculator body = toad face. -->
     <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M36,43 a6,6 0 1,0 12,0 a6,6 0 1,0 -12,0 M60,43 a6,6 0 1,0 12,0 a6,6 0 1,0 -12,0" />
+        android:fillColor="#A9D48C"
+        android:pathData="M41,43 h26 a8,8 0 0 1 8,8 v18 a8,8 0 0 1 -8,8 h-26 a8,8 0 0 1 -8,-8 v-18 a8,8 0 0 1 8,-8 z" />
 
-    <!-- Front feet peeking under the body. -->
+    <!-- Eye bumps, merged into the head silhouette. -->
     <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M38.5,75 A6.5,3 0 1,0 51.5,75 A6.5,3 0 1,0 38.5,75 M56.5,75 A6.5,3 0 1,0 69.5,75 A6.5,3 0 1,0 56.5,75" />
+        android:fillColor="#A9D48C"
+        android:pathData="M45,39.5 m-7.5,0 a7.5,7.5 0 1,0 15,0 a7.5,7.5 0 1,0 -15,0 M63,39.5 m-7.5,0 a7.5,7.5 0 1,0 15,0 a7.5,7.5 0 1,0 -15,0" />
 
-    <!-- Pupils. -->
-    <path
-        android:fillColor="#1B2A13"
-        android:pathData="M39.3,42.5 a2.7,2.7 0 1,0 5.4,0 a2.7,2.7 0 1,0 -5.4,0 M63.3,42.5 a2.7,2.7 0 1,0 5.4,0 a2.7,2.7 0 1,0 -5.4,0" />
-
-    <!-- Nostrils. -->
+    <!-- The display, drawn dark between the eyes. -->
     <path
         android:fillColor="#1B2A13"
-        android:pathData="M48.3,52.5 a1.2,1.2 0 1,0 2.4,0 a1.2,1.2 0 1,0 -2.4,0 M57.3,52.5 a1.2,1.2 0 1,0 2.4,0 a1.2,1.2 0 1,0 -2.4,0" />
+        android:pathData="M42,48.5 h24 a3,3 0 0 1 3,3 v3 a3,3 0 0 1 -3,3 h-24 a3,3 0 0 1 -3,-3 v-3 a3,3 0 0 1 3,-3 z" />
 
-    <!-- The wide toad smile. -->
+    <!-- "=" on the display — the single white accent. -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1.7"
+        android:strokeLineCap="round"
+        android:pathData="M48,51.7 H60" />
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1.7"
+        android:strokeLineCap="round"
+        android:pathData="M48,54.3 H60" />
+
+    <!-- The wide family smile. -->
     <path
         android:fillColor="#00000000"
         android:strokeColor="#1B2A13"
-        android:strokeWidth="3"
+        android:strokeWidth="3.2"
         android:strokeLineCap="round"
-        android:pathData="M42,61.5 Q54,70.5 66,61.5" />
+        android:pathData="M43,60.8 Q54,66.8 65,60.8" />
+
+    <!-- 2×3 keypad — keys that double as toad spots. -->
+    <path
+        android:fillColor="#4C7A3F"
+        android:pathData="M43,68.6 m-2.1,0 a2.1,2.1 0 1,0 4.2,0 a2.1,2.1 0 1,0 -4.2,0 M54,68.6 m-2.1,0 a2.1,2.1 0 1,0 4.2,0 a2.1,2.1 0 1,0 -4.2,0 M65,68.6 m-2.1,0 a2.1,2.1 0 1,0 4.2,0 a2.1,2.1 0 1,0 -4.2,0 M43,73.2 m-2.1,0 a2.1,2.1 0 1,0 4.2,0 a2.1,2.1 0 1,0 -4.2,0 M54,73.2 m-2.1,0 a2.1,2.1 0 1,0 4.2,0 a2.1,2.1 0 1,0 -4.2,0 M65,73.2 m-2.1,0 a2.1,2.1 0 1,0 4.2,0 a2.1,2.1 0 1,0 -4.2,0" />
+
+    <!-- Pupils, shifted down-inward: the toad is reading the display. -->
+    <path
+        android:fillColor="#1B2A13"
+        android:pathData="M46.8,41.3 m-3,0 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0 M61.2,41.3 m-3,0 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0" />
 </vector>
