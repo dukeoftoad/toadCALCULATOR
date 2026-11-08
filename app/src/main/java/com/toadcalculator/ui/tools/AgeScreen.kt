@@ -147,6 +147,15 @@ fun AgeScreen(modifier: Modifier = Modifier) {
                     ),
                 )
             }
+        } else {
+            // F10: previously the result simply vanished when the dates were
+            // inverted — show why instead of leaving the user guessing.
+            Text(
+                text = stringResource(R.string.tool_age_inverted),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.padding(vertical = 8.dp),
+            )
         }
     }
 }

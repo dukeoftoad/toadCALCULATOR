@@ -25,6 +25,8 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -86,6 +88,8 @@ private fun DisplayPanel(state: CalculatorUiState, modifier: Modifier = Modifier
     val clipboard = LocalClipboardManager.current
     val hScroll = rememberScrollState()
     val justEvaluated = state.justEvaluated && state.equalsError == null
+    val memCd = stringResource(R.string.cd_memory_indicator)
+    val ansCd = stringResource(R.string.cd_ans_indicator)
 
     // Keep the tail (caret end) of long expressions in view.
     LaunchedEffect(state.expression) {
@@ -128,8 +132,45 @@ private fun DisplayPanel(state: CalculatorUiState, modifier: Modifier = Modifier
             expressionText.length > 16 -> 38.sp
             else -> 46.sp
         }
+        // Memory / Ans status badges — appear above the expression only when the
+        // corresponding store holds a value (Phase 9.8).
+        if (state.memory != null || state.lastAnswer != null) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 6.dp),
+                horizontalArrangement = Arrangement.End,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                if (state.memory != null) {
+                    Text(
+                        text = "M",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier
+                            .padding(horizontal = 4.dp)
+                            .testTag(CalcTags.MEMORY_INDICATOR)
+                            .semantics { contentDescription = memCd },
+                    )
+                }
+                if (state.lastAnswer != null) {
+                    Text(
+                        text = "Ans",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier
+                            .padding(horizontal = 4.dp)
+                            .testTag(CalcTags.ANS_INDICATOR)
+                            .semantics { contentDescription = ansCd },
+                    )
+                }
+            }
+        }
         if (justEvaluated) {
             // After `=` the result IS the main line — rendered as the primary accent.
+            // A plain number: no glyph transform (keeps the sign ASCII for tests).
             Text(
                 text = expressionText,
                 fontSize = fontSize,
@@ -145,7 +186,7 @@ private fun DisplayPanel(state: CalculatorUiState, modifier: Modifier = Modifier
             )
         } else {
             Text(
-                text = expressionText,
+                text = displayExpression(expressionText),
                 fontSize = fontSize,
                 fontWeight = FontWeight.Normal,
                 color = if (state.expression.isEmpty()) {
@@ -198,3 +239,18 @@ internal fun errorMessage(error: MathError): String = when (error) {
     is MathError.SyntaxError -> stringResource(R.string.error_syntax, error.position)
     MathError.UnbalancedParentheses -> stringResource(R.string.error_unbalanced)
 }
+
+/**
+ * Pretty-prints the raw expression for the display: ASCII operators that the
+ * engine parses (`*` `/`) become the standard glyphs (`×` `÷`), and the verbose
+ * function names `sqrt(` / `cbrt(` collapse to `√(` / `∛(`. The stored
+ * [CalculatorUiState.expression] stays ASCII so history entries re-parse; only
+ * the rendered text is swapped. Applied to the expression line only — the
+ * result/preview line shows formatted numbers and is left untouched (B9).
+ */
+internal fun displayExpression(raw: String): String =
+    raw
+        .replace("sqrt(", "√(")
+        .replace("cbrt(", "∛(")
+        .replace("*", "×")
+        .replace("/", "÷")

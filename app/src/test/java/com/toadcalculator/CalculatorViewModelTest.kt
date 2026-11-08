@@ -6,6 +6,7 @@ import androidx.lifecycle.SavedStateHandle
 import com.google.common.truth.Truth.assertThat
 import com.toadcalculator.fakes.FakeHistoryRepository
 import com.toadcalculator.fakes.FakeSettingsRepository
+import com.toadcalculator.math.AngleMode
 import com.toadcalculator.ui.calculator.KeypadKey
 import com.toadcalculator.viewmodel.CalculatorViewModel
 import kotlinx.coroutines.Dispatchers
@@ -198,5 +199,106 @@ class CalculatorViewModelTest {
         assertThat(state().secondMode).isTrue()
         viewModel.toggleScientific()
         assertThat(state().secondMode).isFalse()
+    }
+
+    // ---- Phase 9.8: memory, Ans, double-equals, state restore ----
+
+    @Test
+    fun `double equals does not duplicate history`() = runTest(dispatcher) {
+        type(KeypadKey.Digit('2'), KeypadKey.Plus, KeypadKey.Digit('3'), KeypadKey.Equals)
+        advanceUntilIdle()
+        assertThat(history.entries.value).hasSize(1)
+        // B2: a second "=" right after a successful "=" is a no-op — it must
+        // not log a redundant "5 → 5" entry.
+        type(KeypadKey.Equals)
+        advanceUntilIdle()
+        assertThat(history.entries.value).hasSize(1)
+    }
+
+    @Test
+    fun `angle mode toggle survives process death`() {
+        // B3: a session RAD toggle must survive process death, not be reset to
+        // the settings default.
+        viewModel.toggleAngleMode()
+        assertThat(state().angleMode).isEqualTo(AngleMode.RAD)
+        val handle = SavedStateHandle(mapOf(
+            "calculator.expression" to "",
+            "calculator.angle_mode" to "RAD",
+        ))
+        val revived = CalculatorViewModel(history, settings, handle)
+        assertThat(revived.uiState.value.angleMode).isEqualTo(AngleMode.RAD)
+    }
+
+    @Test
+    fun `second mode toggle survives process death`() {
+        viewModel.toggleScientific()
+        viewModel.onKey(KeypadKey.Second)
+        assertThat(state().secondMode).isTrue()
+        val handle = SavedStateHandle(mapOf(
+            "calculator.expression" to "",
+            "calculator.scientific" to true,
+            "calculator.second_mode" to true,
+        ))
+        val revived = CalculatorViewModel(history, settings, handle)
+        assertThat(revived.uiState.value.secondMode).isTrue()
+    }
+
+    @Test
+    fun `memory plus stores the live preview`() {
+        type(KeypadKey.Digit('5'), KeypadKey.Plus, KeypadKey.Digit('5')) // preview = 10
+        viewModel.onKey(KeypadKey.MemoryPlus)
+        assertThat(state().memory).isNotNull()
+        assertThat(state().lastAnswer).isNotNull()
+    }
+
+    @Test
+    fun `memory recall inserts the stored value`() {
+        type(KeypadKey.Digit('5'), KeypadKey.Plus, KeypadKey.Digit('5'))
+        viewModel.onKey(KeypadKey.MemoryPlus) // memory = 10
+        type(KeypadKey.Clear)
+        viewModel.onKey(KeypadKey.MemoryRecall)
+        assertThat(state().expression).isEqualTo("10")
+    }
+
+    @Test
+    fun `memory minus subtracts from the store`() {
+        type(KeypadKey.Digit('8'))
+        viewModel.onKey(KeypadKey.MemoryPlus) // memory = 8
+        type(KeypadKey.Clear)
+        type(KeypadKey.Digit('3'))
+        viewModel.onKey(KeypadKey.MemoryMinus) // memory = 8 - 3 = 5
+        type(KeypadKey.Clear)
+        viewModel.onKey(KeypadKey.MemoryRecall)
+        assertThat(state().expression).isEqualTo("5")
+    }
+
+    @Test
+    fun `memory clear empties the store`() {
+        type(KeypadKey.Digit('5'))
+        viewModel.onKey(KeypadKey.MemoryPlus)
+        assertThat(state().memory).isNotNull()
+        viewModel.onKey(KeypadKey.MemoryClear)
+        assertThat(state().memory).isNull()
+    }
+
+    @Test
+    fun `ans recalls the last successful result`() {
+        type(KeypadKey.Digit('6'), KeypadKey.Mul, KeypadKey.Digit('7'), KeypadKey.Equals)
+        assertThat(state().lastAnswer).isNotNull()
+        type(KeypadKey.Clear)
+        viewModel.onKey(KeypadKey.Ans)
+        assertThat(state().expression).isEqualTo("42")
+    }
+
+    @Test
+    fun `memory survives process death`() {
+        type(KeypadKey.Digit('9'))
+        viewModel.onKey(KeypadKey.MemoryPlus) // memory = 9
+        val handle = SavedStateHandle(mapOf(
+            "calculator.expression" to "9",
+            "calculator.memory" to "9",
+        ))
+        val revived = CalculatorViewModel(history, settings, handle)
+        assertThat(revived.uiState.value.memory).isNotNull()
     }
 }

@@ -54,6 +54,7 @@ object ToolTags {
     const val BMI_RESULT = "tool_bmi_result"
     const val AGE_RESULT = "tool_age_result"
     const val DIFF_RESULT = "tool_diff_result"
+    const val PERCENT_RESULT = "tool_percent_result"
 }
 
 fun toolCardTag(dest: ToolDestination): String = "tool_open_${dest.name.lowercase()}"
@@ -170,7 +171,7 @@ private fun ToolCard(
     }
 }
 
-enum class ToolDestination { UNIT_CONVERTER, BMI, AGE, DATE_DIFF }
+enum class ToolDestination { UNIT_CONVERTER, BMI, AGE, DATE_DIFF, PERCENT }
 
 @Composable
 fun toolTitle(dest: ToolDestination): String = when (dest) {
@@ -178,6 +179,7 @@ fun toolTitle(dest: ToolDestination): String = when (dest) {
     ToolDestination.BMI -> stringResource(R.string.tool_bmi_title)
     ToolDestination.AGE -> stringResource(R.string.tool_age_title)
     ToolDestination.DATE_DIFF -> stringResource(R.string.tool_diff_title)
+    ToolDestination.PERCENT -> stringResource(R.string.tool_percent_title)
 }
 
 @Composable
@@ -186,6 +188,7 @@ private fun toolSubtitle(dest: ToolDestination): String = when (dest) {
     ToolDestination.BMI -> stringResource(R.string.tool_bmi_subtitle)
     ToolDestination.AGE -> stringResource(R.string.tool_age_subtitle)
     ToolDestination.DATE_DIFF -> stringResource(R.string.tool_diff_subtitle)
+    ToolDestination.PERCENT -> stringResource(R.string.tool_percent_subtitle)
 }
 
 /** Brand icon for each tool card (custom stroke vectors, no extended icons dep). */
@@ -194,6 +197,7 @@ fun toolIconRes(dest: ToolDestination): Int = when (dest) {
     ToolDestination.BMI -> R.drawable.ic_tool_bmi
     ToolDestination.AGE -> R.drawable.ic_tool_age
     ToolDestination.DATE_DIFF -> R.drawable.ic_tool_datadiff
+    ToolDestination.PERCENT -> R.drawable.ic_tool_percent
 }
 
 /** Shared numeric input field. */

@@ -5,9 +5,12 @@
     <!-- Intentionally NO uses-permission entries:
          toadCALCULATOR is offline-first with zero permissions. -->
 
+    <!-- allowBackup is false: the About sheet promises "your data never leaves
+         this device." Auto Backup to Google Drive would copy the Room history
+         and DataStore preferences off-device, contradicting that claim. -->
     <application
         android:name=".ToadApplication"
-        android:allowBackup="true"
+        android:allowBackup="false"
         android:enableOnBackInvokedCallback="true"
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher_round"

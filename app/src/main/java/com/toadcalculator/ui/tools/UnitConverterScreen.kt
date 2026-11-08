@@ -28,6 +28,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.toadcalculator.R
 import com.toadcalculator.math.tools.ConverterCategory
@@ -57,11 +59,11 @@ fun UnitConverterScreen(modifier: Modifier = Modifier) {
     }
 
     val numeric = value.toDoubleOrNull()
-    val result = if (numeric != null) {
-        formatToolNumber(convert(category, fromUnit, toUnit, numeric))
-    } else {
-        "—"
-    }
+    // Numeric result kept alongside the display string so the swap button can
+    // carry the converted quantity into the new "from" field (B11).
+    val resultValue: Double? = numeric?.let { convert(category, fromUnit, toUnit, it) }
+    val result = if (resultValue != null) formatToolNumber(resultValue) else "—"
+    val swapCd = stringResource(R.string.tool_swap)
 
     Column(
         modifier = modifier
@@ -116,11 +118,21 @@ fun UnitConverterScreen(modifier: Modifier = Modifier) {
             )
             IconButton(
                 onClick = {
+                    // B11: carry the converted quantity so the swap preserves it
+                    // (1 m → 3.28 ft, swap → 3.28 ft → 1 m) instead of leaving
+                    // the raw "1" in the new from-unit's space.
+                    val carried = resultValue
                     val f = fromUnit
                     fromUnit = toUnit
                     toUnit = f
+                    if (carried != null && !carried.isNaN() && !carried.isInfinite()) {
+                        val text = formatToolNumber(carried)
+                        if (text.isNotEmpty() && text.matches(Regex("^\\d*\\.?\\d*$"))) value = text
+                    }
                 },
-                modifier = Modifier.testTag("tool_conv_swap"),
+                modifier = Modifier
+                    .testTag("tool_conv_swap")
+                    .semantics { contentDescription = swapCd },
             ) {
                 Text(
                     text = "⇅",

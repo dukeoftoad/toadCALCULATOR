@@ -44,6 +44,10 @@ data class CalculatorUiState(
     val scientific: Boolean = false,
     /** 2nd toggle active: secondary function keys shown. */
     val secondMode: Boolean = false,
+    /** Calculator memory (M+/M−/MR/MC). null = empty. Survives process death. */
+    val memory: BigDecimal? = null,
+    /** Last successful "=" result, recallable via the Ans key. Survives process death. */
+    val lastAnswer: BigDecimal? = null,
 )
 
 /**
@@ -84,19 +88,38 @@ class CalculatorViewModel(
             }
         }
         viewModelScope.launch {
-            // Settings define the START-UP angle mode; session toggles win afterwards.
-            val pref = settingsRepository.angleMode.first()
-            _uiState.update { applyPreview(it.copy(angleMode = AngleMode.valueOf(pref.name))) }
+            // Settings define the START-UP angle mode — but only when no session
+            // toggle was restored from SavedStateHandle. B3: previously a RAD
+            // toggle made before process death was silently reset to the settings
+            // default on revival.
+            if (savedState.get<String>(KEY_ANGLE_MODE) == null) {
+                val pref = settingsRepository.angleMode.first()
+                _uiState.update { applyPreview(it.copy(angleMode = AngleMode.valueOf(pref.name))) }
+            }
         }
     }
 
     private fun restoreState(): CalculatorUiState {
         val expression = savedState.get<String>(KEY_EXPRESSION) ?: ""
         val scientific = savedState.get<Boolean>(KEY_SCIENTIFIC) ?: false
+        val secondMode = savedState.get<Boolean>(KEY_SECOND_MODE) ?: false
+        val angleMode = savedState.get<String>(KEY_ANGLE_MODE)?.let {
+            runCatching { AngleMode.valueOf(it) }.getOrNull()
+        } ?: AngleMode.DEG
+        val memory = savedState.get<String>(KEY_MEMORY)?.let {
+            runCatching { BigDecimal(it) }.getOrNull()
+        }
+        val lastAnswer = savedState.get<String>(KEY_LAST_ANSWER)?.let {
+            runCatching { BigDecimal(it) }.getOrNull()
+        }
         val state = CalculatorUiState(
             expression = expression,
             cursor = expression.length,
             scientific = scientific,
+            secondMode = secondMode,
+            angleMode = angleMode,
+            memory = memory,
+            lastAnswer = lastAnswer,
         )
         return applyPreview(state)
     }
@@ -109,6 +132,11 @@ class CalculatorViewModel(
             KeypadKey.Clear -> onClear()
             KeypadKey.Second -> toggleSecondMode()
             KeypadKey.AngleToggle -> toggleAngleMode()
+            KeypadKey.MemoryClear -> onMemoryClear()
+            KeypadKey.MemoryRecall -> onMemoryRecall()
+            KeypadKey.MemoryPlus -> onMemoryPlus()
+            KeypadKey.MemoryMinus -> onMemoryMinus()
+            KeypadKey.Ans -> onAns()
             else -> insertKey(key)
         }
     }
@@ -116,24 +144,70 @@ class CalculatorViewModel(
     fun toggleScientific() {
         val newValue = !_uiState.value.scientific
         savedState[KEY_SCIENTIFIC] = newValue
+        // Turning the scientific pad off also collapses the 2nd row.
+        savedState[KEY_SECOND_MODE] = false
         _uiState.update { it.copy(scientific = newValue, secondMode = false) }
     }
 
     private fun toggleSecondMode() {
-        _uiState.update { it.copy(secondMode = !it.secondMode) }
+        val newValue = !_uiState.value.secondMode
+        savedState[KEY_SECOND_MODE] = newValue
+        _uiState.update { it.copy(secondMode = newValue) }
     }
 
-    private fun insertKey(key: KeypadKey) {
+    private fun insertKey(key: KeypadKey) = insertText(key.text, key.startsNewValue, isDot = key is KeypadKey.Dot)
+
+    /**
+     * Inserts [text] at the end of the expression. After "=", values start a new
+     * calculation while operators/parens continue from the result. Shared by the
+     * static keypad keys and by MR/Ans (which pass a formatted stored value).
+     */
+    private fun insertText(text: String, startsNewValue: Boolean, isDot: Boolean = false) {
         val s = _uiState.value
-        // After "=", values start a new calculation; operators continue from the result.
         var expression = s.expression
         if (s.justEvaluated) {
-            expression = if (key.startsNewValue) "" else currentResultText(s)
+            expression = if (startsNewValue) "" else currentResultText(s)
         }
-        if (key is KeypadKey.Dot && currentNumberHasDot(expression, expression.length)) return
+        if (isDot && currentNumberHasDot(expression, expression.length)) return
 
-        val newText = expression + key.text
+        val newText = expression + text
         commit(newText, newText.length, justEvaluated = false)
+    }
+
+    /** MC: forget the memory value. */
+    private fun onMemoryClear() {
+        savedState[KEY_MEMORY] = null
+        _uiState.update { it.copy(memory = null) }
+    }
+
+    /** MR: insert the stored memory value as a numeric literal (no-op if empty). */
+    private fun onMemoryRecall() {
+        val mem = _uiState.value.memory ?: return
+        insertText(NumberFormatter.formatForInput(mem, _uiState.value.precision), startsNewValue = true)
+    }
+
+    /** M+: add the live preview to memory (and remember it as the last answer). */
+    private fun onMemoryPlus() {
+        val value = _uiState.value.previewValue ?: return
+        val newMem = (_uiState.value.memory ?: BigDecimal.ZERO).add(value)
+        savedState[KEY_MEMORY] = NumberFormatter.formatForInput(newMem, _uiState.value.precision)
+        savedState[KEY_LAST_ANSWER] = NumberFormatter.formatForInput(value, _uiState.value.precision)
+        _uiState.update { it.copy(memory = newMem, lastAnswer = value) }
+    }
+
+    /** M−: subtract the live preview from memory (and remember it as the last answer). */
+    private fun onMemoryMinus() {
+        val value = _uiState.value.previewValue ?: return
+        val newMem = (_uiState.value.memory ?: BigDecimal.ZERO).subtract(value)
+        savedState[KEY_MEMORY] = NumberFormatter.formatForInput(newMem, _uiState.value.precision)
+        savedState[KEY_LAST_ANSWER] = NumberFormatter.formatForInput(value, _uiState.value.precision)
+        _uiState.update { it.copy(memory = newMem, lastAnswer = value) }
+    }
+
+    /** Ans: insert the last successful result as a numeric literal (no-op if none). */
+    private fun onAns() {
+        val ans = _uiState.value.lastAnswer ?: return
+        insertText(NumberFormatter.formatForInput(ans, _uiState.value.precision), startsNewValue = true)
     }
 
     private fun onBackspace() {
@@ -155,6 +229,10 @@ class CalculatorViewModel(
         val s = _uiState.value
         val expression = s.expression
         if (expression.isBlank()) return
+        // B2: pressing "=" again right after a successful "=" would re-evaluate
+        // the formatted result and log a redundant "5 → 5" history entry. The
+        // result is already shown and already logged, so this is a no-op.
+        if (s.justEvaluated && s.equalsError == null) return
         when (val result = evaluateQuietly(expression, s.angleMode)) {
             is MathResult.Success -> {
                 val formatted = NumberFormatter.format(result.value, s.precision)
@@ -162,6 +240,7 @@ class CalculatorViewModel(
                     historyRepository.add(expression, formatted)
                 }
                 savedState[KEY_EXPRESSION] = formatted
+                savedState[KEY_LAST_ANSWER] = NumberFormatter.formatForInput(result.value, s.precision)
                 _uiState.update {
                     it.copy(
                         expression = formatted,
@@ -169,6 +248,7 @@ class CalculatorViewModel(
                         previewValue = result.value,
                         equalsError = null,
                         justEvaluated = true,
+                        lastAnswer = result.value,
                     )
                 }
             }
@@ -184,10 +264,10 @@ class CalculatorViewModel(
     }
 
     fun toggleAngleMode() {
+        val newMode = if (_uiState.value.angleMode == AngleMode.DEG) AngleMode.RAD else AngleMode.DEG
+        savedState[KEY_ANGLE_MODE] = newMode.name
         _uiState.update {
-            applyPreview(
-                it.copy(angleMode = if (it.angleMode == AngleMode.DEG) AngleMode.RAD else AngleMode.DEG),
-            )
+            applyPreview(it.copy(angleMode = newMode))
         }
     }
 
@@ -229,6 +309,10 @@ class CalculatorViewModel(
     companion object {
         private const val KEY_EXPRESSION = "calculator.expression"
         private const val KEY_SCIENTIFIC = "calculator.scientific"
+        private const val KEY_SECOND_MODE = "calculator.second_mode"
+        private const val KEY_ANGLE_MODE = "calculator.angle_mode"
+        private const val KEY_MEMORY = "calculator.memory"
+        private const val KEY_LAST_ANSWER = "calculator.last_answer"
 
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {

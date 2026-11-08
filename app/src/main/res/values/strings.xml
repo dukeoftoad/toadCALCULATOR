@@ -65,6 +65,15 @@
     <string name="cd_key_mul">Multiply</string>
     <string name="cd_key_div">Divide</string>
 
+    <!-- Memory + Ans keys (Phase 9.8) -->
+    <string name="cd_key_mc">Memory clear</string>
+    <string name="cd_key_mr">Memory recall</string>
+    <string name="cd_key_mplus">Add to memory</string>
+    <string name="cd_key_mminus">Subtract from memory</string>
+    <string name="cd_key_ans">Last answer</string>
+    <string name="cd_memory_indicator">Memory has a value</string>
+    <string name="cd_ans_indicator">Last answer available</string>
+
     <!-- Display interactions -->
     <string name="copied_toast">Copied to clipboard</string>
 
@@ -138,4 +147,19 @@
     <string name="tool_diff_weeks_value">%1$d wk %2$d d</string>
     <string name="tool_diff_ymd">Calendar span</string>
     <string name="tool_diff_ymd_value">%1$d y %2$d m %3$d d</string>
+
+    <!-- Percentage tool (Phase 9.8) -->
+    <string name="tool_percent_title">Percentage</string>
+    <string name="tool_percent_subtitle">Of a number, off a number, increase and decrease</string>
+    <string name="percent_mode_of">is what % of</string>
+    <string name="percent_mode_portion">% of</string>
+    <string name="percent_mode_increase">% increase</string>
+    <string name="percent_mode_decrease">% decrease</string>
+    <string name="percent_input_a">Value A</string>
+    <string name="percent_input_b">Value B</string>
+    <string name="percent_result">Result</string>
+
+    <!-- Inverted-date feedback (Phase 9.8) -->
+    <string name="tool_age_inverted">Age-at date must be on or after the date of birth.</string>
+    <string name="tool_diff_inverted">End date must be on or after the start date.</string>
 </resources>

@@ -55,6 +55,16 @@ sealed class KeypadKey(
     data object Clear : KeypadKey("clear", "AC")
     data object Second : KeypadKey("2nd", "2nd")
     data object AngleToggle : KeypadKey("angle", "DEG")
+
+    // Memory + last-answer keys (Phase 9.8). Non-inserting: handled explicitly
+    // in CalculatorViewModel.onKey — M+/M− fold the live preview into memory,
+    // MR/Ans insert the stored value as a numeric literal. [text] is a stable
+    // tag/identifier only (never appended to the expression).
+    data object MemoryClear : KeypadKey("mc", "MC")
+    data object MemoryRecall : KeypadKey("mr", "MR", startsNewValue = true)
+    data object MemoryPlus : KeypadKey("mplus", "M+")
+    data object MemoryMinus : KeypadKey("mminus", "M−")
+    data object Ans : KeypadKey("ans", "Ans", startsNewValue = true)
 }
 
 /**

@@ -722,3 +722,138 @@ root-caused and logged (9.4–9.6). No product-logic regressions at any point.
 
 **Next.** Iterate on owner hardware feedback: settings/history sheets still carry
 the pre-Phase-9 look if the owner wants the same modern pass.
+---
+
+## Phase 9.8 — v1.1.0: memory + Ans, percentage tool, display glyphs, modern history/settings, bug round — 2026-11-08T05:40:00Z
+
+**Skill:** implement — iterate (owner: "Prepare next version updates with new features, flaws fixing, bugs fixing if any").
+
+**Summary.** The first post-1.0 feature release. A read-only audit of the v1.0.0
+tree surfaced 16 bugs and 21 flaws; this phase ships the subset that fit a single
+CI-verified iteration without a local Android toolchain (sandbox has JDK 21 JRE
+only — no `javac`, no SDK; CI remains the build/test authority, per standing owner
+instruction). Five new features, twelve bug fixes, four flaw fixes, and a modern
+visual pass on the two screens Phase 9.7 explicitly flagged.
+
+**New features.**
+- **Memory keys + Ans** (N1+N4). A fifth scientific-block row — MC / MR / M+ / M− /
+  Ans — folds the live preview into a `BigDecimal` memory store and recalls the
+  last successful `=` result. `memory` and `lastAnswer` persist through
+  `SavedStateHandle` (as `formatForInput` strings, restored via `BigDecimal(it)`)
+  so they survive process death. The display gains "M" and "Ans" status badges
+  above the expression when the stores are non-empty. Memory lives in the
+  scientific block only so the basic 5×4 keypad — and its viewport budget — is
+  untouched.
+- **Percentage tool** (N3). A fifth offline tool: four modes (is-what-%-of, % of,
+  increase, decrease) over two inputs, pure math in `core-math/tools/Percent.kt`
+  (7 JVM tests). Mirrors the existing tool screen pattern; new `ic_tool_percent`
+  stroke vector; new `ToolDestination.PERCENT` wired through ToolCommon + AppRoot.
+- **Display glyphs** (B9, promoted to a feature). The expression line now renders
+  `× ÷ √ ∛` instead of `* / sqrt( cbrt(`; the stored expression stays ASCII so
+  history entries re-parse. Applied to the expression line only — the result line
+  keeps ASCII `-` so signed numbers and existing result assertions are unchanged.
+- **Modern history sheet** (F2). Entries are tonal `surfaceContainer` cards with a
+  `primaryContainer` "=" icon tile, `titleMedium` expression + `bodyMedium` result,
+  staggered by 10 dp gaps (dividers removed). Empty state gained a centered tile.
+- **Modern settings screen** (F2). Each preference is a tonal card (the settings
+  analogue of a tool card); the low-contrast `HorizontalDivider`s are gone.
+
+**Bug fixes.**
+- B1: history "Clear all" now opens its confirmation dialog — the dialog state
+  existed in the wrapper but the button bypassed it, so one tap wiped everything.
+  Moved the dialog into `HistorySheetContent`; updated the locked-in test.
+- B2: pressing `=` again right after a successful `=` no longer re-evaluates the
+  formatted result and logs a redundant "5 → 5" history entry.
+- B3: `angleMode` and `secondMode` now persist to `SavedStateHandle` and survive
+  process death. The init block no longer overrides a restored session angle-mode
+  toggle with the settings default.
+- B4: BMI no longer renders a misleading "Underweight" label beneath the "—"
+  placeholder when input is empty/invalid — `category` is null for NaN.
+- B5: the healthy-weight range guards against height ≤ 0 (was 0.0–0.0 kg).
+- B7: the root `BackHandler` predicate now includes `showHistory`, so back from a
+  history sheet opened over SETTINGS/TOOLS closes the sheet first instead of
+  leaving `showHistory` lingering in saved state.
+- B8: `android:allowBackup="false"` — the About sheet promises "your data never
+  leaves this device"; Auto Backup to Google Drive would have copied the Room DB
+  and DataStore off-device, contradicting that claim.
+- B11: unit-converter swap now carries the converted quantity (1 m → 3.28 ft,
+  swap → 3.28 ft → 1 m) instead of leaving the raw "1" in the new from-unit.
+- B12: swap button gained a `contentDescription` ("Swap units") for TalkBack.
+- B13: removed the dead `KeypadKey.AngleToggle -> "DEG"` label branch (the chip
+  renders via `AngleChip`, not `KeypadButton`; the branch was both unreachable
+  and wrong in RAD).
+- B15: `versionCode = 2`, `versionName = "1.1.0"`.
+- B16: the 2nd chip and the SCI pill now expose toggle state to TalkBack
+  (`role = Role.Switch` + `selected`); previously they announced as plain
+  buttons with no on/off state.
+
+**Flaw fixes.**
+- F1: SCI pill raised from 38 dp to 48 dp (touch-target minimum).
+- F3: removed the dead `dynamicColor` parameter from `ToadCalculatorTheme`
+  (never overridden; dynamic color is intentionally off).
+- F10: Age and DateDiff screens show an inline error-colored message when dates
+  are inverted, instead of silently hiding the result block.
+- F2: history + settings modern pass (see above).
+
+**Deferred (documented, not done this phase — each needs either an owner decision
+or a local toolchain to de-risk):** B6 (long-press ⌫ fires a framework haptic
+even with haptics off — fix requires replacing `combinedClickable` with a custom
+`pointerInput` gesture, paired with the N5 haptic-strength rewrite which changes
+the `SettingsRepository` interface and breaks many tests), B10 (cold-start theme
+flash — touches splash timing), B14 (signing keystore in-repo — explicitly
+accepted in 9.3, revisit if distribution widens), F4 (dead `cursor` field — or
+wire as the N10 tap-to-edit-cursor feature), F12/F13 (title-size/typography-token
+cleanup), F14 (formatter unification), F18 (Build→Calculate icon — needs
+core-icon verification), F20 (translations — needs target markets), F21 (lint in
+CI), N2 (programmer/hex mode — L-sized, its own phase), N6 (copy/share menu),
+N7–N10.
+
+**Files.** `app/build.gradle.kts` (version bump), `AndroidManifest.xml`
+(allowBackup), `res/values/strings.xml`, `res/drawable/ic_tool_percent.xml` (new),
+`ui/calculator/{Keys,CalcTags,CalculatorKeypad,CalculatorScreen}.kt`,
+`ui/AppRoot.kt`, `ui/tools/{ToolCommon,PercentScreen,UnitConverterScreen,BmiScreen,
+AgeScreen,DateDiffScreen}.kt` (PercentScreen + ic_tool_percent new),
+`ui/history/HistorySheet.kt`, `ui/settings/SettingsScreen.kt`, `ui/theme/Theme.kt`,
+`viewmodel/CalculatorViewModel.kt`, `core-math/.../tools/Percent.kt` (new),
+`core-math/.../tools/PercentTest.kt` (new), `app/.../CalculatorViewModelTest.kt`,
+`app/.../ui/{ScientificUiTest,ToolsUiTest,HistoryUiTest}.kt`, `README.md`,
+`WORKLOG.md`. Every source file keeps its SPDX header.
+
+**Tests.** Added 7 pure-JVM `PercentTest` cases; 9 `CalculatorViewModelTest` cases
+(double-equals, angle/second/memory state-restore, M+/M−/MR/MC, Ans); 2
+`ScientificUiTest` cases (memory store+recall with the on-display indicator, Ans);
+1 `ToolsUiTest` case (percentage tool default); renamed
+`tools_home_lists_all_four` → `..._all_five` (now asserts Percentage too);
+updated `HistoryUiTest.clear_all_*` to assert the confirmation dialog fires
+before clearing. No existing assertion weakened; the one behavior change (B1) is
+the bug fix itself, and its test now reflects correct behavior. A read-only
+compile-safety review of all 23 changed files found no compile-blockers
+(exhaustive `when`s, imports, symbol references, string resources, signatures
+all verified) — but the sandbox cannot compile, so CI is the final gate.
+
+**Verification.** CI run pending on push (this commit). Per standing instruction,
+CI is the build/test authority: `:core-math:test`, `testDebugUnitTest`,
+`:app:assembleRelease` (R8 + resource shrink), the <4 MiB size gate, and the
+zero-permission manifest audit. If CI is red, the iterate loop root-causes and
+fixes in follow-up commits (as in 9.4–9.6).
+
+**Decisions.**
+- Memory keys live in the scientific block, not the base keypad, to preserve the
+  viewport budget (the basic `=` key must stay visible on an 844 px viewport —
+  see Phase W1 decisions). Basic-mode users get Ans-free history chaining as
+  before; scientific-mode users get full physical-calculator parity.
+- `displayExpression` swaps only `* / sqrt( cbrt(` — not `-` (unary/binary
+  disambiguation is error-prone) and not `+` (already a clean glyph). The win is
+  `× ÷ √ ∛`; the stored expression stays ASCII so history reload re-parses.
+- The history/settings modern pass uses cards + icon tiles but deliberately
+  omits the staggered `Animatable` entrance — the sheet/screen already animates
+  on entry, and the stagger adds composition cost + CI risk for marginal gain.
+- `allowBackup=false` is the simplest privacy-correct choice; a scoped
+  `dataExtractionRules` would allow backup of non-sensitive prefs, but for a
+  zero-data-leaving app "off" is the honest default.
+
+**Open questions.** None blocking. The deferred items (esp. B6/N5 haptic strength
+and B14 signing) are owner decisions for a future phase.
+
+**Next.** Push → CI. If green: tag `v1.1.0`, cut a GitHub Release with the signed
+APK from the green run's artifact. Then iterate on owner hardware feedback.

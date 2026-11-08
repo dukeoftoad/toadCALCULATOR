@@ -76,9 +76,14 @@ class HistoryUiTest {
     }
 
     @Test
-    fun clear_all_button_signals_clear() {
+    fun clear_all_requires_confirmation() {
+        // B1: the clear-all button must open a confirmation dialog before
+        // wiping history (previously it cleared immediately with no recourse).
         setContent(entries[0], entries[1])
         composeRule.onNodeWithTag(HistoryTags.CLEAR_ALL).performClick()
+        // Nothing cleared yet — the dialog is showing.
+        assertThat(cleared).isEqualTo(0)
+        composeRule.onNodeWithText("Clear").performClick()
         assertThat(cleared).isEqualTo(1)
     }
 }

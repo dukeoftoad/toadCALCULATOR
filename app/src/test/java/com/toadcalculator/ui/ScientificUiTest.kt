@@ -238,4 +238,24 @@ class ScientificUiTest {
         assertExpression("0")
         assertThat(viewModel.uiState.value.expression).isEmpty()
     }
+
+    // ---- Phase 9.8: memory + Ans ----
+
+    @Test
+    fun memory_keys_store_and_recall() {
+        press(KeypadKey.Digit('5'), KeypadKey.Plus, KeypadKey.Digit('5')) // preview = 10
+        press(KeypadKey.MemoryPlus)
+        composeRule.onNodeWithTag(CalcTags.MEMORY_INDICATOR).assertIsDisplayed()
+        press(KeypadKey.Clear)
+        press(KeypadKey.MemoryRecall)
+        assertExpression("10")
+    }
+
+    @Test
+    fun ans_key_recalls_last_result() {
+        press(KeypadKey.Digit('6'), KeypadKey.Mul, KeypadKey.Digit('7'), KeypadKey.Equals)
+        press(KeypadKey.Clear)
+        press(KeypadKey.Ans)
+        assertExpression("42")
+    }
 }

@@ -32,6 +32,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -48,6 +51,7 @@ import com.toadcalculator.ui.settings.SettingsScreen
 import com.toadcalculator.ui.tools.AgeScreen
 import com.toadcalculator.ui.tools.BmiScreen
 import com.toadcalculator.ui.tools.DateDiffScreen
+import com.toadcalculator.ui.tools.PercentScreen
 import com.toadcalculator.ui.tools.ToolDestination
 import com.toadcalculator.ui.tools.ToolsHomeScreen
 import com.toadcalculator.ui.tools.UnitConverterScreen
@@ -107,14 +111,18 @@ private fun AppScaffold(settingsViewModel: SettingsViewModel) {
 
     // System back (gesture/button): drill back through tool → tools home →
     // calculator, mirroring the top-bar arrow. Without this the gesture closed
-    // the whole app from any screen. Disabled at the calculator root so the
-    // default (exit) still applies there.
-    BackHandler(enabled = screen != AppScreen.CALCULATOR) {
-        if (screen == AppScreen.TOOLS && activeTool != null) {
-            activeTool = null
-        } else {
-            screen = AppScreen.CALCULATOR
-            activeTool = null
+    // the whole app from any screen. The history sheet intercepts back itself
+    // (ModalBottomSheet); this handler also covers the case where the sheet is
+    // open over SETTINGS/TOOLS so the first back closes the sheet, not the
+    // screen — preventing showHistory from lingering in saved state (B7).
+    BackHandler(enabled = screen != AppScreen.CALCULATOR || showHistory) {
+        when {
+            showHistory -> showHistory = false
+            screen == AppScreen.TOOLS && activeTool != null -> activeTool = null
+            else -> {
+                screen = AppScreen.CALCULATOR
+                activeTool = null
+            }
         }
     }
 
@@ -177,10 +185,14 @@ private fun AppScaffold(settingsViewModel: SettingsViewModel) {
                                 MaterialTheme.colorScheme.onSurfaceVariant
                             },
                             modifier = Modifier
-                                .height(38.dp)
+                                .height(48.dp)
                                 .padding(start = 4.dp)
                                 .testTag(AppTags.TOGGLE_SCIENTIFIC)
-                                .semantics { contentDescription = sciCd },
+                                .semantics {
+                                    contentDescription = sciCd
+                                    role = Role.Switch
+                                    selected = scientific
+                                },
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 Text(
@@ -243,6 +255,7 @@ private fun AppScaffold(settingsViewModel: SettingsViewModel) {
                 ToolDestination.BMI -> BmiScreen(modifier = contentModifier)
                 ToolDestination.AGE -> AgeScreen(modifier = contentModifier)
                 ToolDestination.DATE_DIFF -> DateDiffScreen(modifier = contentModifier)
+                ToolDestination.PERCENT -> PercentScreen(modifier = contentModifier)
                 null -> ToolsHomeScreen(
                     onOpen = { activeTool = it },
                     modifier = contentModifier,
