@@ -962,9 +962,21 @@ size delta (v1.1.0: 1,766,344 bytes; two new small vectors ≈ +4 KB).
 `build` + `permissions-audit` both success; signed release APK at
 1,767,528 bytes (1.69 MiB, +1,184 bytes vs v1.1.0's 1,766,344 for the two new
 vectors) vs the 4 MiB gate. The owner reviewed the icon on-device and approved;
-this phase cuts `v1.1.1` (versionCode 3) — a patch over v1.1.0 carrying only
-the icon redesign, zero behavior change — pending a fresh green CI run on the
-version-bump commit.
+`v1.1.1` (versionCode 3) is a patch over v1.1.0 carrying only the icon
+redesign, zero behavior change. The version-bump commit (4d6a5bb) re-ran CI
+green on the first try — run 42461340779, both jobs success; the signed APK
+byte-for-byte matches the pre-bump artifact (1,767,528 bytes).
 
-**Next.** Tag `v1.1.1` and publish the signed APK once CI re-runs green on the
-version bump.
+**Published.** Tag `v1.1.1` at 4d6a5bb; GitHub Release 438116364
+("toadCALCULATOR 1.1.1") with signed asset `toadCALCULATOR-1.1.1.apk`
+(1,767,528 bytes, pulled from the green run's `toadCALCULATOR-release`
+artifact). Download: `https://github.com/dukeoftoad/toadCALCULATOR/releases/
+download/v1.1.1/toadCALCULATOR-1.1.1.apk`.
+
+**Next.** Iterate on owner hardware feedback. Deferred candidates for v1.2.0
+remain as listed in 9.8: B6/N5 (haptic strength — needs the
+`SettingsRepository` interface rewrite + custom long-press gesture), N2
+(programmer/hex mode — L-sized), F2 staggered entrances for history/settings,
+F20 translations, F21 lint in CI. If the owner wants icon palette/pose
+variants later, toadFILES' icon-switcher pattern (per-palette mipmap files +
+alias activity) is the established in-family blueprint.
