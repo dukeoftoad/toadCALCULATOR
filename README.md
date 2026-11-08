@@ -18,7 +18,7 @@ A personal, offline-first Android calculator. **Zero permissions, zero ads, zero
 - **Settings** (DataStore): tonal cards — theme (system/light/dark), precision, default angle mode, haptics, clear history, About
 - **Offline tools:** unit converter (8 categories incl. temperature offset math, swap carries the value), BMI with WHO categories, age calculator, date difference with inclusive/exclusive toggle, **percentage calculator** (of / % of / increase / decrease)
 - Display renders × ÷ √ ∛ glyphs (stored expression stays ASCII so history re-parses)
-- Material 3, toad-green palette, light/dark, adaptive icon, themed splash, full TalkBack labels (incl. toggle selected-state), 48 dp touch targets, `allowBackup=false` (data never leaves the device)
+- Material 3, toad-green palette, light/dark, adaptive icon (**the Calculator-Toad** — the calculator device *is* the toad), themed splash, proper alpha-hole monochrome layer, full TalkBack labels (incl. toggle selected-state), 48 dp touch targets, `allowBackup=false` (data never leaves the device)
 - Release APK **under 4 MiB**, enforced by CI; merged manifest audited to contain **zero permissions**
 
 ## License
