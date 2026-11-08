@@ -103,8 +103,9 @@ class ToolsUiTest {
         composeRule.setContent {
             ToadCalculatorTheme { PercentScreen() }
         }
-        // Defaults: a=25, b=200, OF_TOTAL → 25 is 12.5% of 200.
+        // Defaults: a=25, b=200, OF_TOTAL → 25 is 12.5% of 200. The result row
+        // appends " %" so match on the substring.
         composeRule.onNodeWithTag(ToolTags.PERCENT_RESULT).assertIsDisplayed()
-        composeRule.onNodeWithText("12.5").assertIsDisplayed()
+        composeRule.onNodeWithText("12.5", substring = true).assertIsDisplayed()
     }
 }
