@@ -831,11 +831,30 @@ compile-safety review of all 23 changed files found no compile-blockers
 (exhaustive `when`s, imports, symbol references, string resources, signatures
 all verified) — but the sandbox cannot compile, so CI is the final gate.
 
-**Verification.** CI run pending on push (this commit). Per standing instruction,
-CI is the build/test authority: `:core-math:test`, `testDebugUnitTest`,
-`:app:assembleRelease` (R8 + resource shrink), the <4 MiB size gate, and the
-zero-permission manifest audit. If CI is red, the iterate loop root-causes and
-fixes in follow-up commits (as in 9.4–9.6).
+**Verification.** CI green after the iterate loop (per standing instruction CI
+is the build/test authority — sandbox has no Android toolchain):
+- Run 42453140405 (f6e4fbd) → red at `:core-math:test`: `PercentTest.increase`
+  asserted `isEqualTo(220.0)` but `200*(1+10/100)` drifts to
+  220.00000000000003 in Double (0.1/1.1 aren't binary-exact). Fixed by switching
+  to binary-exact values `100*(1+50/100)=150.0` (commit 7949b24).
+- Run 42453390304 (7949b24) → red at `:app:testDebugUnitTest`: the percent UI
+  test's `onNodeWithText("12.5")` uses the exact-match default, but the result
+  row renders "12.5 %" (unit appended). Fixed with `substring = true`
+  (commit d58085a). Notably all 96 other app tests passed first try — every new
+  VM test (memory/Ans/state-restore), both ScientificUiTest cases, the
+  HistoryUiTest confirmation update, and both AppRootUiTest back-nav cases.
+- Run 42453575638 (d58085a) → **green**: both `build` and `permissions-audit`
+  jobs success. Signed `app-release.apk` at **1,766,344 bytes (1.68 MiB)** vs
+  the 4 MiB gate. Manifest audit prints only the AGP-auto-injected
+  `DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION` (signature-scoped to this app's
+  own package — the standard internal-IPC guard present since v1.0.0, not a
+  real permission); the audit job is informational and succeeds, as in 9.7.
+
+**Owner-visible iteration cost this phase.** Two red CI runs before green,
+both test-only floating-point / matcher slips on code that couldn't be
+executed locally (no `javac`/SDK). Each root-caused from the CI logs and fixed
+in a single follow-up commit. No product-logic regressions — the 96 other app
+tests and all core-math tests passed on the first red run.
 
 **Decisions.**
 - Memory keys live in the scientific block, not the base keypad, to preserve the
@@ -855,5 +874,8 @@ fixes in follow-up commits (as in 9.4–9.6).
 **Open questions.** None blocking. The deferred items (esp. B6/N5 haptic strength
 and B14 signing) are owner decisions for a future phase.
 
-**Next.** Push → CI. If green: tag `v1.1.0`, cut a GitHub Release with the signed
-APK from the green run's artifact. Then iterate on owner hardware feedback.
+**Next.** CI is green on d58085a. Tag `v1.1.0` at d58085a and cut a GitHub
+Release with the signed `app-release.apk` (artifact `toadCALCULATOR-release`
+from run 42453575638, 1,766,344 bytes). Then iterate on owner hardware feedback
+— the deferred items (esp. B6/N5 haptic strength and F2 staggered entrances)
+are the next candidates.
