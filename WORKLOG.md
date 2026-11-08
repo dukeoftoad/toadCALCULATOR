@@ -958,6 +958,13 @@ size delta (v1.1.0: 1,766,344 bytes; two new small vectors ≈ +4 KB).
 
 **Open questions.** None.
 
-**Next.** Push → CI (resources-only change; expect green on first run). If the
-owner wants variants later, toadFILES' icon-switcher pattern (per-palette
-mipmap files + alias activity) is the established in-family blueprint.
+**Verification (final).** CI run 42460055281 (d8af266) green on the FIRST run —
+`build` + `permissions-audit` both success; signed release APK at
+1,767,528 bytes (1.69 MiB, +1,184 bytes vs v1.1.0's 1,766,344 for the two new
+vectors) vs the 4 MiB gate. Not released: the icon is visual/subjective, so the
+owner should eyeball it on-device first — cutting `v1.1.1` with the new icon is
+one command away on request.
+
+**Next.** Owner on-device review of the icon. If the owner wants palette or
+pose variants later, toadFILES' icon-switcher pattern (per-palette mipmap
+files + alias activity) is the established in-family blueprint.
