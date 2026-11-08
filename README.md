@@ -4,7 +4,7 @@
 
 A personal, offline-first Android calculator. **Zero permissions, zero ads, zero tracking, zero network access.**
 
-- **Status:** v1.1.0 (Phase 9.8) — memory keys + Ans, percentage tool, display glyphs, modern history/settings, and a round of bug fixes. Phase-by-phase handoff in [WORKLOG.md](WORKLOG.md).
+- **Status:** v1.1.1 (Phase 9.9) — launcher icon redesigned ("the Calculator-Toad": the calculator device *is* the toad), with a proper alpha-hole monochrome layer for themed icons. Phase-by-phase handoff in [WORKLOG.md](WORKLOG.md).
 
 ## Features
 
