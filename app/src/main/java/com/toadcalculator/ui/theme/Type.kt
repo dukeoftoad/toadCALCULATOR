@@ -39,6 +39,15 @@ val ToadTypography = Typography(
         fontSize = 16.sp,
         lineHeight = 24.sp,
     ),
+    // F12/F13: the app-bar and brand titles previously piggybacked on
+    // titleLarge with an ad-hoc `copy(fontSize = 17.sp)` at every call site;
+    // they now have their own token.
+    titleSmall = TextStyle(
+        fontFamily = FontFamily.Default,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 17.sp,
+        lineHeight = 24.sp,
+    ),
     bodyLarge = TextStyle(
         fontFamily = FontFamily.Default,
         fontWeight = FontWeight.Normal,

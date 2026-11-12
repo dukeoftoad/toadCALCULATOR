@@ -980,3 +980,134 @@ remain as listed in 9.8: B6/N5 (haptic strength — needs the
 F20 translations, F21 lint in CI. If the owner wants icon palette/pose
 variants later, toadFILES' icon-switcher pattern (per-palette mipmap files +
 alias activity) is the established in-family blueprint.
+---
+
+## Phase 10.1 — audit flaw round (B6, B10, F4, F12/F13, F14, F18, F21) + plugin architecture map — 2026-11-12T09:30:00Z
+
+**Skill:** implement — flaw round + architecture proposal (owner: "fix the
+flaws in audit and propose implementation map for plugin like features … per
+example the user can install a power calculator where the MCB rating is
+recommended based on DC/AC entered values").
+
+**Summary.** Two deliverables. (1) The remaining *safely fixable* audit flaws
+from the 9.8 read-only audit are fixed. (2) `docs/PLUGIN_ARCHITECTURE.md` —
+the full implementation map for a GitHub-released plugin/extension system,
+designed so the zero-permission promise and the CI `permissions-audit` gate
+survive intact.
+
+**Flaw fixes.**
+- **B6 (bug) — framework haptic with haptics off.** `KeypadButton` replaced
+  `combinedClickable` with a custom `pointerInput` + `detectTapGestures`
+  gesture. The framework performed a long-press haptic at gesture
+  recognition — unconditionally, before the callback ran, so a user with
+  haptics disabled still felt every long-press on ⌫. The custom gesture never
+  auto-haptics: the only haptic remains `performKey`'s `KEYBOARD_TAP`, gated
+  on the user's setting. Press-in scale now drives off our own
+  `onPress/tryAwaitRelease` state (with `finally` reset, so a cancelled
+  gesture can never leave the key stuck shrunk); `rememberUpdatedState`
+  keeps the gesture handler current without restarting `pointerInput`.
+  Semantics are explicit (`onClick`/`onLongClick` actions added in
+  `semantics {}`) — verified against compose-ui 1.8.1 sources that the
+  extension signatures take `(() -> Boolean)?`; the test suite's
+  `performClick()` path and TalkBack both keep working. Parameters renamed
+  `onClick/onLongClick` → `onTap/onLongTap` to avoid shadowing the semantics
+  extension names inside the `semantics {}` block. The ripple is dropped —
+  the scale is the press feedback ("physical key" feel); no test asserts
+  ripple.
+- **B10 (bug) — cold-start theme flash.** MainActivity now holds the system
+  splash (`setKeepOnScreenCondition`) until `AppRoot` signals the first
+  settings emission has themed the frame; a stored DARK preference no longer
+  flashes the system-default palette. `SettingsUiState` gains `loaded`
+  (false → true on the first `combine` emission; tested). Safety valve: a
+  1.5 s timeout releases the splash even if DataStore never emits — a
+  one-frame flash beats a held screen. `AppRoot(onFirstFrame)` defaults to
+  null, so tests composing `AppRoot()` directly are unaffected (and
+  MainActivity itself is not under test).
+- **F4 — dead `cursor` field.** `CalculatorUiState.cursor` was written by
+  every edit path and read by nothing (the display always appends at the
+  tail; `BackspaceTest` exercises the pure `backspaceToken(text, cursor)`
+  function, not the field). Removed from the state class, `commit()`,
+  `restoreState`, `onClear`, `onEquals`, `loadExpression`.
+- **F12/F13 — typography token.** The four `titleLarge.copy(fontSize =
+  17.sp)` sites (brand title + three app-bar titles) collapse into a real
+  `titleSmall` token (17 sp SemiBold) in `ToadTypography`.
+- **F14 — formatter unification.** `formatToolNumber` (+ its
+  `BigDecimalStrip` helper) moved out of `UnitConverterScreen.kt` into
+  `ToolCommon.kt` and is now THE shared tool-result formatter (converter,
+  percentage, BMI); new `formatFixed(v, decimals)` covers fixed-precision
+  results. BMI's ad-hoc `String.format("%.2f")` / `"%.1f – %.1f kg"` routes
+  through `formatFixed` — rendered strings byte-identical (the ToolsUiTest
+  assertions "22.86", "18.5 – 24.9 kg" unchanged).
+- **F18 — Build → calculator glyph, resolved after verification.** Downloaded
+  material-icons-core 1.7.8's version metadata from Google Maven: it carries
+  exactly the 48 classic filled icons — `Calculate` is NOT among them, and
+  the extended-icons dependency stays barred by the 4 MiB gate. Resolution:
+  new hand-drawn stroke vector `ic_tool_calculator.xml` (24 dp, strokeWidth
+  1.8, round caps, #FFFFFFFF) in the established tool-icon language; the
+  app-bar Tools button swaps the misleading wrench for it. Zero dependency
+  change.
+- **F21 — lint in CI.** New `lint` job: `:app:lintDebug` + report artifacts.
+  Deliberately `continue-on-error` at job level for now — the findings are
+  untriaged and a red job would mask real regressions; the run stays green
+  while the report accumulates. Promote to blocking in a follow-up phase
+  once clean (documented in the workflow comment).
+
+**Deferred, unchanged:** B14 (keystore in-repo — accepted in 9.3), F20
+(translations — owner decision on markets), N2/N5/N6/N7–N10 (feature-sized;
+N5 haptic strength still pairs with a `SettingsRepository` interface rewrite),
+F2 staggered entrances. None of these are "flaws in audit" that can be fixed
+without either an owner decision or a feature-sized phase.
+
+**Files.** `app/.../viewmodel/CalculatorViewModel.kt` (F4),
+`app/.../viewmodel/SettingsViewModel.kt` (B10 loaded flag),
+`app/MainActivity.kt` (B10 splash gate), `app/.../ui/AppRoot.kt` (B10 +
+F12/F13 titleSmall + F18 icon), `app/.../ui/theme/Type.kt` (titleSmall),
+`app/.../ui/calculator/CalculatorKeypad.kt` (B6 gesture),
+`app/.../ui/tools/ToolCommon.kt` (F14 formaters), `app/.../ui/tools/
+UnitConverterScreen.kt` (F14 removal), `app/.../ui/tools/BmiScreen.kt` (F14),
+`res/drawable/ic_tool_calculator.xml` (F18, new),
+`.github/workflows/build.yml` (F21 lint job), `docs/PLUGIN_ARCHITECTURE.md`
+(new), `app/src/test/.../ToolsFormatTest.kt` (new),
+`app/src/test/.../SettingsViewModelTest.kt` (+1 test), `README.md`,
+`WORKLOG.md`. Every source file keeps its SPDX header.
+
+**Tests.** New `ToolsFormatTest` (11 cases) pins the unified formatter:
+NaN/∞ → "—", 10-significant-digit rounding ("0.3333333333"), trailing-zero
+strip ("100"), zero plain, scientific thresholds ("2.000000E+15",
+"1.000000E-12"), fixed-decimal pad ("22.00") and healthy-range endpoints.
+New `SettingsViewModelTest` case pins the `loaded` flag (false before first
+emission, true after). No existing assertion weakened; BMI/converter strings
+are byte-identical by construction.
+
+**Verification (no local toolchain — CI is the authority).** API risk was
+pre-flattened by reading the actual artifact sources from Google Maven
+before writing code: compose-ui 1.8.1 `SemanticsProperties.onClick/
+onLongClick` signatures, foundation 1.8.1 `detectTapGestures` +
+`PressGestureScope.tryAwaitRelease`, material3 1.3.2 `Typography.titleSmall`,
+and the material-icons-core 1.7.8 API-levels JSON for the F18 icon list.
+Watch the CI run + the new lint job's first report; APK size delta expected
+≈ +2 KB (one small vector + no new dependencies).
+
+**Decisions.**
+- B6 fixes the *bug* (unconditional haptic) without the *feature* (N5 haptic
+  strength) — the interface rewrite stays deferred, exactly as scoped in 9.8.
+- B10's safety valve trades one possible late flash for never holding the
+  splash hostage on a corrupt-DataStore device.
+- F18's "verification" outcome is recorded in both the vector's header
+  comment and this log: the icon is not missing by oversight — it does not
+  exist in the dependency we are allowed to have.
+- The plugin map (see the doc for the full rationale) keeps the app
+  network-free: bundled offline catalog for the in-app scroll, browser
+  mediates the download, SAF imports the file, declarative JSON formula
+  manifests only — no dynamic code loading, no new permissions, CI audit
+  stays the regression test of the design. Option C (INTERNET permission)
+  is presented to the owner as the only path that would break the promise,
+  with Option B (companion app) as the later upgrade if the browser hop
+  feels heavy.
+
+**Open questions (owner).** (1) Plugin rollout: proceed with 10.2 per the
+map? (2) Option A vs B for the store (A recommended). (3) Translations
+markets (F20) still unanswered.
+
+**Next.** CI iterate loop on this phase; then, on owner approval, Phase 10.2
+(plugin foundation) per `docs/PLUGIN_ARCHITECTURE.md` §10.

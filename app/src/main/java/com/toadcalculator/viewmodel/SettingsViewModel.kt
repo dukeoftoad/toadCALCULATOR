@@ -25,6 +25,8 @@ data class SettingsUiState(
     val precision: Int = SettingsDefaults.PRECISION,
     val angleMode: AngleModePref = SettingsDefaults.ANGLE_MODE,
     val haptics: Boolean = SettingsDefaults.HAPTICS,
+    /** True once the repository flows have emitted at least once (B10 splash gate). */
+    val loaded: Boolean = false,
 )
 
 /** Settings screen ViewModel: one StateFlow over all preferences + action callbacks. */
@@ -43,7 +45,7 @@ class SettingsViewModel(
             settingsRepository.angleMode,
             settingsRepository.haptics,
         ) { theme, precision, angle, haptics ->
-            SettingsUiState(theme, precision, angle, haptics)
+            SettingsUiState(theme, precision, angle, haptics, loaded = true)
         }.onEach { _uiState.value = it }
             .launchIn(viewModelScope)
     }

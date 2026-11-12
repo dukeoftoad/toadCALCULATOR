@@ -94,3 +94,39 @@ jobs:
             echo "WARNING: unexpected permissions detected."
           fi
           echo "=== end of permission list ==="
+
+  lint:
+    # F21: surface Android/Compose lint findings on every push. Report-only
+    # for now: the job-level continue-on-error keeps the release gate
+    # (build + permissions-audit) green while the findings are triaged.
+    # Promote to blocking (remove continue-on-error) in a follow-up phase
+    # once the report is clean or the findings are fixed/annotated.
+    runs-on: ubuntu-latest
+    needs: build
+    continue-on-error: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Setup Gradle (with caching)
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Lint (debug variant)
+        run: ./gradlew --no-daemon :app:lintDebug
+
+      - name: Upload lint reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: toadCALCULATOR-lint
+          path: |
+            app/build/reports/lint-results-debug.html
+            app/build/reports/lint-results-debug.xml
+          retention-days: 30
+          if-no-files-found: warn

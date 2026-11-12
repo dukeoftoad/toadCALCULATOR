@@ -30,7 +30,6 @@ import kotlinx.coroutines.launch
 
 data class CalculatorUiState(
     val expression: String = "",
-    val cursor: Int = 0,
     /** Live evaluation of [expression]; null while invalid or empty. */
     val previewValue: BigDecimal? = null,
     /** Error from pressing "=" (rendered inline until the next edit). */
@@ -114,7 +113,6 @@ class CalculatorViewModel(
         }
         val state = CalculatorUiState(
             expression = expression,
-            cursor = expression.length,
             scientific = scientific,
             secondMode = secondMode,
             angleMode = angleMode,
@@ -171,7 +169,7 @@ class CalculatorViewModel(
         if (isDot && currentNumberHasDot(expression, expression.length)) return
 
         val newText = expression + text
-        commit(newText, newText.length, justEvaluated = false)
+        commit(newText, justEvaluated = false)
     }
 
     /** MC: forget the memory value. */
@@ -214,14 +212,14 @@ class CalculatorViewModel(
         val s = _uiState.value
         var expression = s.expression
         if (s.justEvaluated) expression = currentResultText(s)
-        val (newText, newCursor) = backspaceToken(expression, expression.length)
-        commit(newText, newCursor, justEvaluated = false)
+        val (newText, _) = backspaceToken(expression, expression.length)
+        commit(newText, justEvaluated = false)
     }
 
     private fun onClear() {
         savedState[KEY_EXPRESSION] = ""
         _uiState.update {
-            it.copy(expression = "", cursor = 0, previewValue = null, equalsError = null, justEvaluated = false)
+            it.copy(expression = "", previewValue = null, equalsError = null, justEvaluated = false)
         }
     }
 
@@ -244,7 +242,6 @@ class CalculatorViewModel(
                 _uiState.update {
                     it.copy(
                         expression = formatted,
-                        cursor = formatted.length,
                         previewValue = result.value,
                         equalsError = null,
                         justEvaluated = true,
@@ -260,7 +257,7 @@ class CalculatorViewModel(
 
     /** Loads an entry tapped in history back into the input as editable text. */
     fun loadExpression(text: String) {
-        commit(text, text.length, justEvaluated = false)
+        commit(text, justEvaluated = false)
     }
 
     fun toggleAngleMode() {
@@ -271,13 +268,12 @@ class CalculatorViewModel(
         }
     }
 
-    private fun commit(expression: String, cursor: Int, justEvaluated: Boolean) {
+    private fun commit(expression: String, justEvaluated: Boolean) {
         savedState[KEY_EXPRESSION] = expression
         _uiState.update {
             applyPreview(
                 it.copy(
                     expression = expression,
-                    cursor = cursor,
                     justEvaluated = justEvaluated,
                     equalsError = null,
                 ),

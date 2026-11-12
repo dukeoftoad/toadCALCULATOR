@@ -10,10 +10,7 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,15 +27,21 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.onLongClick
+import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.selected
@@ -198,7 +201,7 @@ private fun ScientificBlock(
             MEMORY_ROW.forEach { key ->
                 KeypadButton(
                     key = key,
-                    onClick = { performKey(key) },
+                    onTap = { performKey(key) },
                     height = 50.dp,
                     modifier = Modifier.weight(1f),
                 )
@@ -212,7 +215,7 @@ private fun ScientificBlock(
                         row.forEach { key ->
                             KeypadButton(
                                 key = key,
-                                onClick = { performKey(key) },
+                                onTap = { performKey(key) },
                                 height = 50.dp,
                                 modifier = Modifier.weight(1f),
                             )
@@ -224,7 +227,7 @@ private fun ScientificBlock(
                     SCI_CONSTANT_ROW.forEach { key ->
                         KeypadButton(
                             key = key,
-                            onClick = { performKey(key) },
+                            onTap = { performKey(key) },
                             height = 50.dp,
                             modifier = Modifier.weight(1f),
                         )
@@ -307,8 +310,8 @@ private fun KeypadGrid(
                 row.forEach { key ->
                     KeypadButton(
                         key = key,
-                        onClick = { performKey(key) },
-                        onLongClick = if (key is KeypadKey.Backspace) {
+                        onTap = { performKey(key) },
+                        onLongTap = if (key is KeypadKey.Backspace) {
                             { performKey(KeypadKey.Clear) }
                         } else {
                             null
@@ -322,13 +325,12 @@ private fun KeypadGrid(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun KeypadButton(
     key: KeypadKey,
-    onClick: () -> Unit,
+    onTap: () -> Unit,
     modifier: Modifier = Modifier,
-    onLongClick: (() -> Unit)? = null,
+    onLongTap: (() -> Unit)? = null,
     height: androidx.compose.ui.unit.Dp = 56.dp,
 ) {
     val style = styleFor(key)
@@ -372,9 +374,17 @@ fun KeypadButton(
         KeypadKey.Div -> stringResource(R.string.cd_key_div)
     }
 
-    // Subtle press-in scale — the modern "physical key" feel.
-    val interactionSource = remember { MutableInteractionSource() }
-    val pressed by interactionSource.collectIsPressedAsState()
+    // B6: the press-in scale is driven by our own tap gesture. The previous
+    // combinedClickable performed a FRAMEWORK long-press haptic at gesture
+    // recognition — unconditionally, even when the haptics setting was off.
+    // The custom gesture below never auto-haptics: the only haptic is
+    // performKey's KEYBOARD_TAP, gated on the user's haptics preference.
+    var pressed by remember { mutableStateOf(false) }
+    // rememberUpdatedState keeps the gesture handler current without
+    // restarting pointerInput (a restart would cancel in-flight presses and
+    // lose taps fired during recomposition).
+    val currentOnTap by rememberUpdatedState(onTap)
+    val currentOnLongTap by rememberUpdatedState(onLongTap)
     val scale by animateFloatAsState(
         targetValue = if (pressed) 0.93f else 1f,
         label = "key-press-scale",
@@ -388,13 +398,30 @@ fun KeypadButton(
                 scaleY = scale
             }
             .testTag(CalcTags.key(key))
-            .semantics { contentDescription = cd }
-            .combinedClickable(
-                interactionSource = interactionSource,
-                indication = androidx.compose.foundation.LocalIndication.current,
-                onClick = onClick,
-                onLongClick = onLongClick,
-            ),
+            .semantics {
+                contentDescription = cd
+                // Explicit click semantics: a bare pointerInput contributes no
+                // actions, but the test suite drives keys via performClick()
+                // and TalkBack needs the click/long-click actions.
+                onClick { currentOnTap(); true }
+                currentOnLongTap?.let { action ->
+                    onLongClick { action(); true }
+                }
+            }
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onPress = {
+                        pressed = true
+                        try {
+                            tryAwaitRelease()
+                        } finally {
+                            pressed = false
+                        }
+                    },
+                    onTap = { currentOnTap() },
+                    onLongPress = { currentOnLongTap?.invoke() },
+                )
+            },
         shape = RoundedCornerShape(16.dp),
         color = style.container,
         contentColor = style.content,

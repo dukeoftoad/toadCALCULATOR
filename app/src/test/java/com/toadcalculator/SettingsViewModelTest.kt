@@ -55,6 +55,15 @@ class SettingsViewModelTest {
     }
 
     @Test
+    fun `loaded flag flips after first repository emission`() = runTest(dispatcher) {
+        // B10: the splash gate keys off this flag — false before the flows
+        // emit, true afterwards.
+        assertThat(viewModel.uiState.value.loaded).isFalse()
+        advanceUntilIdle()
+        assertThat(viewModel.uiState.value.loaded).isTrue()
+    }
+
+    @Test
     fun `setters write through to repository`() = runTest(dispatcher) {
         viewModel.setTheme(ThemeMode.DARK)
         viewModel.setPrecision(6)
