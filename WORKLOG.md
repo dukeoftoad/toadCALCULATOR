@@ -1079,14 +1079,16 @@ New `SettingsViewModelTest` case pins the `loaded` flag (false before first
 emission, true after). No existing assertion weakened; BMI/converter strings
 are byte-identical by construction.
 
-**Verification (no local toolchain — CI is the authority).** API risk was
-pre-flattened by reading the actual artifact sources from Google Maven
-before writing code: compose-ui 1.8.1 `SemanticsProperties.onClick/
-onLongClick` signatures, foundation 1.8.1 `detectTapGestures` +
-`PressGestureScope.tryAwaitRelease`, material3 1.3.2 `Typography.titleSmall`,
-and the material-icons-core 1.7.8 API-levels JSON for the F18 icon list.
-Watch the CI run + the new lint job's first report; APK size delta expected
-≈ +2 KB (one small vector + no new dependencies).
+**Verification.** CI run 43192537370 (904cb8c) **green on the FIRST run** —
+`build` + `permissions-audit` + the new `lint` job all success. Signed
+release APK at **1,768,256 bytes (1.69 MiB, +728 bytes vs v1.1.1's
+1,767,528)** vs the 4 MiB gate. The lint job's first report: **20 warnings,
+0 errors** — all housekeeping (GradleDependency/AndroidGradlePluginVersion
+update suggestions, one UnusedAttribute note on `enableOnBackInvokedCallback`);
+no code-level findings from this phase's changes, so promoting `lint` to a
+blocking gate is safe in a follow-up phase. Manifest audit unchanged: zero
+permissions (only AGP's auto-injected signature-scoped
+`DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`, informational, as in 9.7–9.9).
 
 **Decisions.**
 - B6 fixes the *bug* (unconditional haptic) without the *feature* (N5 haptic
@@ -1095,7 +1097,13 @@ Watch the CI run + the new lint job's first report; APK size delta expected
   splash hostage on a corrupt-DataStore device.
 - F18's "verification" outcome is recorded in both the vector's header
   comment and this log: the icon is not missing by oversight — it does not
-  exist in the dependency we are allowed to have.
+  exist in the dependency we are allowed to have. API risk was pre-flattened
+  by reading the actual artifact sources from Google Maven before writing
+  code: compose-ui 1.8.1 `SemanticsProperties.onClick/onLongClick`
+  signatures, foundation 1.8.1 `detectTapGestures` +
+  `PressGestureScope.tryAwaitRelease`, material3 1.3.2
+  `Typography.titleSmall`, and the material-icons-core 1.7.8 API-levels JSON
+  for the F18 icon list — which is why the phase went green first run.
 - The plugin map (see the doc for the full rationale) keeps the app
   network-free: bundled offline catalog for the in-app scroll, browser
   mediates the download, SAF imports the file, declarative JSON formula
