@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+<!-- F18: calculator glyph for the app-bar Tools entry. The filled `Calculate`
+     icon was verified ABSENT from material-icons-core 1.7.8 (48 filled icons
+     only; Build the wrench was the previous — misleading — glyph), and the
+     material-icons-extended dependency is barred by the 4 MiB size gate. This
+     hand-drawn stroke vector matches the tool-card icon family exactly:
+     24dp viewport, strokeWidth 1.8, round cap/join, #FFFFFFFF stroke (tinted
+     by the composing Icon). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Body: rounded rectangle -->
+    <path
+        android:pathData="M7,3.75 L17,3.75 A2.25,2.25 0 0 1 19.25,6 L19.25,18 A2.25,2.25 0 0 1 17,20.25 L7,20.25 A2.25,2.25 0 0 1 4.75,18 L4.75,6 A2.25,2.25 0 0 1 7,3.75 Z"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="1.8"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:fillColor="#00000000" />
+    <!-- Display bar -->
+    <path
+        android:pathData="M8.4,7.4 L15.6,7.4"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="1.8"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:fillColor="#00000000" />
+    <!-- Keys: 2×2 ticks -->
+    <path
+        android:pathData="M8.4,11.6 L10.2,11.6"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="1.8"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000" />
+    <path
+        android:pathData="M13.8,11.6 L15.6,11.6"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="1.8"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000" />
+    <path
+        android:pathData="M8.4,14.9 L10.2,14.9"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="1.8"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000" />
+    <path
+        android:pathData="M13.8,14.9 L15.6,14.9"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="1.8"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000" />
+</vector>

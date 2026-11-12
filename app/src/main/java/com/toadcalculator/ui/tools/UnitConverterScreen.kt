@@ -222,27 +222,6 @@ private fun UnitDropdown(
     }
 }
 
-/** Tool results keep ~10 significant digits, trimmed, for a clean display. */
-fun formatToolNumber(v: Double): String {
-    if (v.isNaN() || v.isInfinite()) return "—"
-    val abs = kotlin.math.abs(v)
-    return if (abs != 0.0 && (abs >= 1e12 || abs < 1e-9)) {
-        String.format(java.util.Locale.ROOT, "%.6E", v)
-    } else {
-        BigDecimalStrip.strip(v)
-    }
-}
-
-private object BigDecimalStrip {
-    fun strip(v: Double): String {
-        var s = java.math.BigDecimal(v).round(java.math.MathContext(10)).toPlainString()
-        if (s.contains('.')) {
-            s = s.trimEnd('0').trimEnd('.')
-        }
-        return s
-    }
-}
-
 @Composable
 internal fun categoryLabel(c: ConverterCategory): String = when (c) {
     ConverterCategory.LENGTH -> stringResource(R.string.cat_length)

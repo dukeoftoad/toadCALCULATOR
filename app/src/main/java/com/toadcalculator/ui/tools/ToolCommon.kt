@@ -229,6 +229,40 @@ private val DATE_DISPLAY: DateTimeFormatter = DateTimeFormatter.ofLocalizedDate(
 @Composable
 internal fun formatDate(date: LocalDate): String = DATE_DISPLAY.format(date)
 
+/**
+ * F14: the ONE tool-result number formatter, shared by every tool screen
+ * (converter, percentage, BMI healthy-range, and future extensions). Tool
+ * results keep ~10 significant digits, trimmed, for a clean display; values
+ * outside 1e-9…1e12 render in scientific notation.
+ */
+internal fun formatToolNumber(v: Double): String {
+    if (v.isNaN() || v.isInfinite()) return "—"
+    val abs = kotlin.math.abs(v)
+    return if (abs != 0.0 && (abs >= 1e12 || abs < 1e-9)) {
+        String.format(java.util.Locale.ROOT, "%.6E", v)
+    } else {
+        BigDecimalStrip.strip(v)
+    }
+}
+
+private object BigDecimalStrip {
+    fun strip(v: Double): String {
+        var s = java.math.BigDecimal(v).round(java.math.MathContext(10)).toPlainString()
+        if (s.contains('.')) {
+            s = s.trimEnd('0').trimEnd('.')
+        }
+        return s
+    }
+}
+
+/**
+ * F14: fixed-decimal formatting for tool results that always show a set
+ * number of places (BMI value, healthy-weight range). Same engine and locale
+ * discipline as [formatToolNumber].
+ */
+internal fun formatFixed(v: Double, decimals: Int): String =
+    String.format(java.util.Locale.ROOT, "%.${decimals}f", v)
+
 /** Two-column row helper used by tool results. */
 @Composable
 internal fun ResultLine(label: String, value: String) {

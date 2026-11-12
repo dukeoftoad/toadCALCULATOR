@@ -21,6 +21,13 @@ A personal, offline-first Android calculator. **Zero permissions, zero ads, zero
 - Material 3, toad-green palette, light/dark, adaptive icon (**the Calculator-Toad** — the calculator device *is* the toad), themed splash, proper alpha-hole monochrome layer, full TalkBack labels (incl. toggle selected-state), 48 dp touch targets, `allowBackup=false` (data never leaves the device)
 - Release APK **under 4 MiB**, enforced by CI; merged manifest audited to contain **zero permissions**
 
+## Extensions (planned)
+
+A plugin system for calculator extensions (published as GitHub releases,
+browsable in-app offline, imported as files — the app stays 100 %
+network-free) is fully mapped in [docs/PLUGIN_ARCHITECTURE.md](docs/PLUGIN_ARCHITECTURE.md),
+with an MCB/breaker advisor as the worked example.
+
 ## License
 
 Copyright (C) 2025 toadCALCULATOR contributors

@@ -142,7 +142,7 @@ fun BmiScreen(modifier: Modifier = Modifier) {
                 .testTag(ToolTags.BMI_RESULT),
         ) {
             Text(
-                text = if (bmiValue.isNaN()) "—" else String.format(java.util.Locale.ROOT, "%.2f", bmiValue),
+                text = if (bmiValue.isNaN()) "—" else formatFixed(bmiValue, 2),
                 style = MaterialTheme.typography.displayLarge,
                 color = MaterialTheme.colorScheme.primary,
             )
@@ -155,12 +155,7 @@ fun BmiScreen(modifier: Modifier = Modifier) {
             if (healthy != null) {
                 ResultLine(
                     label = stringResource(R.string.tool_healthy_range),
-                    value = String.format(
-                        java.util.Locale.ROOT,
-                        "%.1f – %.1f kg",
-                        healthy.start,
-                        healthy.endInclusive,
-                    ),
+                    value = "${formatFixed(healthy.start, 1)} – ${formatFixed(healthy.endInclusive, 1)} kg",
                 )
             }
         }

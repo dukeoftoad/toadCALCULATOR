@@ -11,7 +11,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.List
-import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -23,6 +22,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -30,6 +30,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
@@ -58,22 +59,43 @@ import com.toadcalculator.ui.tools.UnitConverterScreen
 import com.toadcalculator.ui.theme.ToadCalculatorTheme
 import com.toadcalculator.viewmodel.CalculatorViewModel
 import com.toadcalculator.viewmodel.SettingsViewModel
+import kotlinx.coroutines.delay
 
 enum class AppScreen { CALCULATOR, SETTINGS, TOOLS }
 
 /**
  * Root of the single-activity UI. Applies the persisted theme and hosts the
- * calculator (home), settings, and the four offline tools, plus the history
+ * calculator (home), settings, and the five offline tools, plus the history
  * bottom sheet. Navigation is simple state — no navigation library needed.
+ *
+ * [onFirstFrame] is invoked once the persisted settings have themed the first
+ * composition (B10 splash gate). MainActivity passes a real callback that
+ * releases the system splash; tests compose AppRoot directly and pass
+ * nothing, so the gate never runs there.
  */
 @Composable
-fun AppRoot() {
+fun AppRoot(onFirstFrame: (() -> Unit)? = null) {
     val settingsViewModel: SettingsViewModel = viewModel(factory = SettingsViewModel.Factory)
     val settingsState by settingsViewModel.uiState.collectAsStateWithLifecycle()
+    // B10: hold the system splash until the FIRST repository emission has
+    // themed the frame — a stored DARK preference no longer flashes the
+    // system-default palette on cold start.
+    LaunchedEffect(settingsState.loaded) {
+        if (settingsState.loaded) onFirstFrame?.invoke()
+    }
+    // Safety valve: if settings somehow never emit (corrupt DataStore),
+    // release the splash anyway — better a one-frame flash than a held screen.
+    LaunchedEffect(Unit) {
+        delay(SPLASH_RELEASE_TIMEOUT_MS)
+        onFirstFrame?.invoke()
+    }
     ToadCalculatorTheme(themeMode = settingsState.theme) {
         AppScaffold(settingsViewModel = settingsViewModel)
     }
 }
+
+/** B10: never hold the splash longer than this, even if settings stall. */
+private const val SPLASH_RELEASE_TIMEOUT_MS = 1_500L
 
 /** Single-line brand wordmark: "toad" in the accent green, rest in onSurface. */
 @Composable
@@ -88,7 +110,7 @@ private fun BrandTitle() {
                 append("CALCULATOR")
             }
         },
-        style = MaterialTheme.typography.titleLarge.copy(fontSize = 17.sp),
+        style = MaterialTheme.typography.titleSmall,
         maxLines = 1,
     )
 }
@@ -133,17 +155,17 @@ private fun AppScaffold(settingsViewModel: SettingsViewModel) {
                     when {
                         screen == AppScreen.SETTINGS -> Text(
                             text = stringResource(R.string.settings_title),
-                            style = MaterialTheme.typography.titleLarge.copy(fontSize = 17.sp),
+                            style = MaterialTheme.typography.titleSmall,
                             maxLines = 1,
                         )
                         screen == AppScreen.TOOLS && activeTool != null -> Text(
                             text = com.toadcalculator.ui.tools.toolTitle(activeTool!!),
-                            style = MaterialTheme.typography.titleLarge.copy(fontSize = 17.sp),
+                            style = MaterialTheme.typography.titleSmall,
                             maxLines = 1,
                         )
                         screen == AppScreen.TOOLS -> Text(
                             text = stringResource(R.string.tools_title),
-                            style = MaterialTheme.typography.titleLarge.copy(fontSize = 17.sp),
+                            style = MaterialTheme.typography.titleSmall,
                             maxLines = 1,
                         )
                         else -> BrandTitle()
@@ -209,7 +231,17 @@ private fun AppScaffold(settingsViewModel: SettingsViewModel) {
                                 .testTag(AppTags.OPEN_TOOLS)
                                 .semantics { contentDescription = toolsCd },
                         ) {
-                            Icon(Icons.Filled.Build, contentDescription = null)
+                            // F18: the tools entry carried the wrench (Build) —
+                            // misleading on a calculator app. The filled
+                            // `Calculate` icon is verified ABSENT from
+                            // material-icons-core 1.7.8 (the extended icons
+                            // dependency is barred by the 4 MiB gate), so the
+                            // brand's stroke-icon language provides the glyph:
+                            // same style as the tool cards this button opens.
+                            Icon(
+                                painter = painterResource(R.drawable.ic_tool_calculator),
+                                contentDescription = null,
+                            )
                         }
                         IconButton(
                             onClick = { screen = AppScreen.SETTINGS },
