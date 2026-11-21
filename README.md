@@ -2,9 +2,9 @@
 
 [![build](https://github.com/dukeoftoad/toadCALCULATOR/actions/workflows/build.yml/badge.svg)](https://github.com/dukeoftoad/toadCALCULATOR/actions/workflows/build.yml)
 
-A personal, offline-first Android calculator. **Zero permissions, zero ads, zero tracking, zero network access.**
+A personal, offline-first Android calculator. **Zero ads, zero tracking — the only network use is the optional in-app update check against GitHub Releases** (once per app open, silently, plus a manual "Check for updates" in Settings; nothing downloads without a tap).
 
-- **Status:** v1.1.1 (Phase 9.9) — launcher icon redesigned ("the Calculator-Toad": the calculator device *is* the toad), with a proper alpha-hole monochrome layer for themed icons. Phase-by-phase handoff in [WORKLOG.md](WORKLOG.md).
+- **Status:** v1.1.2 (Phase 11) — in-app update flow ported from toadFILES (silent once-per-open release check + dismissible banner + Settings update panel with download & install). Phase-by-phase handoff in [WORKLOG.md](WORKLOG.md).
 
 ## Features
 
@@ -15,17 +15,17 @@ A personal, offline-first Android calculator. **Zero permissions, zero ads, zero
 - Scientific keypad with a 2nd-functions row (inverse trig, log2, cbrt, abs), a DEG/RAD indicator, and a **memory + Ans row** (MC / MR / M+ / M− / Ans) with on-display M/Ans indicators
 - Display formatting: configurable 6/8/10/12/15 significant digits, trailing-zero stripping, scientific notation outside 1e-9…1e12, optional thousands grouping
 - **History** (Room): newest first, tonal cards with brand tiles, tap to reload an expression, swipe-or-button delete, clear-all **with confirmation**; failed expressions are never stored
-- **Settings** (DataStore): tonal cards — theme (system/light/dark), precision, default angle mode, haptics, clear history, About
+- **Settings** (DataStore): tonal cards — theme (system/light/dark), precision, default angle mode, haptics, clear history, About, and **Updates** (GitHub release check + APK download & install, ported from toadFILES; the silent once-per-open check shows a dismissible banner on the calculator when a newer release ships)
 - **Offline tools:** unit converter (8 categories incl. temperature offset math, swap carries the value), BMI with WHO categories, age calculator, date difference with inclusive/exclusive toggle, **percentage calculator** (of / % of / increase / decrease)
 - Display renders × ÷ √ ∛ glyphs (stored expression stays ASCII so history re-parses)
 - Material 3, toad-green palette, light/dark, adaptive icon (**the Calculator-Toad** — the calculator device *is* the toad), themed splash, proper alpha-hole monochrome layer, full TalkBack labels (incl. toggle selected-state), 48 dp touch targets, `allowBackup=false` (data never leaves the device)
-- Release APK **under 4 MiB**, enforced by CI; merged manifest audited to contain **zero permissions**
+- Release APK **under 4 MiB**, enforced by CI; merged manifest audited in CI — its only two permissions (`INTERNET`, `REQUEST_INSTALL_PACKAGES`) exist solely for the update flow
 
 ## Extensions (planned)
 
 A plugin system for calculator extensions (published as GitHub releases,
-browsable in-app offline, imported as files — the app stays 100 %
-network-free) is fully mapped in [docs/PLUGIN_ARCHITECTURE.md](docs/PLUGIN_ARCHITECTURE.md),
+browsable in-app offline, imported as files — plugins themselves never add
+network use) is fully mapped in [docs/PLUGIN_ARCHITECTURE.md](docs/PLUGIN_ARCHITECTURE.md),
 with an MCB/breaker advisor as the worked example.
 
 ## License

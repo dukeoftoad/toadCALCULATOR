@@ -96,6 +96,16 @@ class SettingsUiTest {
         composeRule.onNodeWithTag(SettingsTags.ABOUT).performClick()
         composeRule.onNodeWithTag(SettingsTags.ABOUT_SHEET).assertIsDisplayed()
         composeRule.onNodeWithText("GPL-3.0-or-later", substring = true).assertIsDisplayed()
-        composeRule.onNodeWithText("no permissions, no network access", substring = true).assertIsDisplayed()
+        // v1.1.2: the update feature is the one honest network use now.
+        composeRule.onNodeWithText("only network use is the optional update check", substring = true)
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun updates_card_shows_check_button_and_installed_version() {
+        setContent()
+        composeRule.onNodeWithText("Updates").assertIsDisplayed()
+        composeRule.onNodeWithText("Check for updates").assertIsDisplayed()
+        composeRule.onNodeWithText("Installed").assertIsDisplayed()
     }
 }

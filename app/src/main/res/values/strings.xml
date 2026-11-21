@@ -89,9 +89,38 @@
     <string name="settings_clear_history">Clear history</string>
     <string name="settings_about">About</string>
     <string name="about_version">Version %1$s</string>
-    <string name="about_privacy">toadCALCULATOR is offline-first: no permissions, no network access, no ads, no tracking. Your data never leaves this device.</string>
+    <string name="about_privacy">toadCALCULATOR works entirely on this device: every calculation, setting and piece of history stays local. Its only network use is the optional update check — one silent request to GitHub per app open, repeated only if you tap Check for updates in Settings. An update APK is downloaded only after you tap Download &amp; install. No ads, no tracking, no accounts — your data never leaves this device.</string>
     <string name="about_license">This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.</string>
     <string name="about_copyright">Copyright © 2025 toadCALCULATOR contributors · GPL-3.0-or-later</string>
+
+    <!-- In-app update flow (ported from toadFILES) -->
+    <string name="update_banner_title">toadCALCULATOR %1$s available</string>
+    <string name="update_banner_subtitle">Update to the latest release — downloaded only if you ask.</string>
+    <string name="update_banner_action">Update</string>
+    <string name="cd_update_banner_dismiss">Dismiss update banner</string>
+    <string name="update_card_title">Updates</string>
+    <string name="update_card_subtitle">toadCALCULATOR contacts GitHub Releases once per app open (silently, in the background) and whenever you tap the button below. Nothing about this device is sent, and nothing downloads without a tap.</string>
+    <string name="update_installed">Installed</string>
+    <string name="update_idle_text">Contacts api.github.com once per app open (silently, in the background) and shows the result here. No account, no telemetry, no periodic polling.</string>
+    <string name="update_check">Check for updates</string>
+    <string name="update_checking">Checking GitHub Releases…</string>
+    <string name="update_up_to_date">You\'re up to date (%1$s).</string>
+    <string name="update_check_again">Check again</string>
+    <string name="update_retry">Retry</string>
+    <string name="update_available_title">toadCALCULATOR %1$s is available</string>
+    <string name="update_new_version">New version</string>
+    <string name="update_size">Size</string>
+    <string name="update_show_full_notes">Show full notes</string>
+    <string name="update_show_less">Show less</string>
+    <string name="update_needs_permission">Allow \"Install unknown apps\" for toadCALCULATOR in the Android screen that just opened, then tap Install again — the APK is already downloaded.</string>
+    <string name="update_downloading_percent">Downloading… %1$d%% — also visible in the notification shade.</string>
+    <string name="update_downloading_indeterminate">Downloading… — also visible in the notification shade.</string>
+    <string name="update_download_install">Download &amp; install</string>
+    <string name="update_retry_download">Retry download</string>
+    <string name="update_install_downloaded">Install downloaded APK</string>
+    <string name="update_view_on_github">View on GitHub</string>
+    <string name="update_dismiss">Dismiss</string>
+    <string name="cd_update_download_progress">Update download progress</string>
 
     <!-- Tools -->
     <string name="tool_converter_title">Unit converter</string>

@@ -2,8 +2,15 @@
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- Intentionally NO uses-permission entries:
-         toadCALCULATOR is offline-first with zero permissions. -->
+    <!-- Offline-first by design. INTERNET exists solely for update checks
+         (a silent once-per-launch GitHub releases check + the user-initiated
+         "Check for updates" flow and its APK download) — no periodic network,
+         analytics or telemetry. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Needed so the downloaded update APK can be handed to the system
+         package installer. Android still asks the user to allow installs
+         from this app first. -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
     <!-- allowBackup is false: the About sheet promises "your data never leaves
          this device." Auto Backup to Google Drive would copy the Room history
