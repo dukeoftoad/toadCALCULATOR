@@ -46,6 +46,7 @@ import com.toadcalculator.R
 import com.toadcalculator.data.AngleModePref
 import com.toadcalculator.data.ThemeMode
 import com.toadcalculator.viewmodel.SettingsUiState
+import com.toadcalculator.viewmodel.UpdateState
 
 object SettingsTags {
     fun theme(mode: ThemeMode) = "settings_theme_${mode.name.lowercase()}"
@@ -57,7 +58,7 @@ object SettingsTags {
     const val ABOUT_SHEET = "about_sheet"
 }
 
-/** Settings screen: theme, precision, angle mode, haptics, clear history, about. */
+/** Settings screen: theme, precision, angle mode, haptics, clear history, about, updates. */
 @Composable
 fun SettingsScreen(
     state: SettingsUiState,
@@ -67,6 +68,11 @@ fun SettingsScreen(
     onHaptics: (Boolean) -> Unit,
     onClearHistory: () -> Unit,
     onOpenHistorySheet: () -> Unit,
+    update: UpdateState = UpdateState.Idle,
+    onCheckUpdates: () -> Unit = {},
+    onDownloadInstall: () -> Unit = {},
+    onDismissUpdate: () -> Unit = {},
+    onOpenUrl: (String) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     var confirmClear by remember { mutableStateOf(false) }
@@ -148,6 +154,28 @@ fun SettingsScreen(
                         .fillMaxWidth()
                         .testTag(SettingsTags.ABOUT),
                 ) { Text(stringResource(R.string.settings_about)) }
+            }
+        }
+
+        // Updates (GitHub Releases check: once per app open + user-initiated) —
+        // ported from toadFILES' About screen update card.
+        SettingsCard(stringResource(R.string.update_card_title)) {
+            Column {
+                Text(
+                    text = stringResource(R.string.update_card_subtitle),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(Modifier.height(10.dp))
+                UpdateRow(stringResource(R.string.update_installed), BuildConfig.VERSION_NAME)
+                Spacer(Modifier.height(10.dp))
+                UpdatePanel(
+                    update = update,
+                    onCheck = onCheckUpdates,
+                    onDownloadInstall = onDownloadInstall,
+                    onDismiss = onDismissUpdate,
+                    onOpenUrl = onOpenUrl,
+                )
             }
         }
     }
