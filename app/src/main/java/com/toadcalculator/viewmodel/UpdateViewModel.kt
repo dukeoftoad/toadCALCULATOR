@@ -286,7 +286,7 @@ class UpdateViewModel(
     private fun mutateAvailable(transform: (UpdateState.Available) -> UpdateState.Available) {
         _state.update { cur ->
             val available = cur as? UpdateState.Available ?: return@update cur
-            cur.copy(update = transform(available))
+            transform(available)
         }
     }
 
