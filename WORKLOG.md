@@ -1119,3 +1119,96 @@ markets (F20) still unanswered.
 
 **Next.** CI iterate loop on this phase; then, on owner approval, Phase 10.2
 (plugin foundation) per `docs/PLUGIN_ARCHITECTURE.md` §10.
+---
+
+## Phase 11 — v1.1.2: in-app update flow, ported from toadFILES — 2026-11-21T11:11:12Z
+
+**Summary.** Ported toadFILES' proven self-update feature (Task 3a) into
+toadCALCULATOR, adapting it to this app's packages, Compose style and
+strings.xml conventions. Architecture, unchanged from the source: a silent
+once-per-process GitHub `releases/latest` probe on app open
+(`StartupUpdateCheck`), a dismissible banner card on the main screen when a
+newer release with an APK ships, and a Settings "Updates" card with the
+user-initiated check, APK download via the system DownloadManager, live
+progress, the "Install unknown apps" permission round-trip and "View on
+GitHub". The checker is a plain `HttpURLConnection` + `org.json` GET (zero new
+Gradle dependencies) with redirect following, one retry on transient
+trouble, and a friendly never-retried rate-limit (403) exception. Dropped
+from the port, deliberately: ALL of toadFILES' lite/edition logic —
+toadCALCULATOR ships a single full APK, so the asset pick is simply the first
+`.apk` asset of the release. Repo constants remapped to
+`dukeoftoad/toadCALCULATOR`, User-Agent `toadCALCULATOR-update-check`,
+download default file `toadcalculator-update.apk`, display name
+"toadCALCULATOR", installed version from `BuildConfig.VERSION_NAME`.
+
+Wiring: `AppRoot` fires `StartupUpdateCheck.instance.checkOnce` on the new
+`ToadApplication.applicationScope` (an app-level scope, exactly like
+toadFILES' ToadApp — a composition scope would put the network attempt on
+Compose's idle clock), renders the banner above the calculator content, and
+feeds the Settings screen from a new `UpdateViewModel` (StateFlow + Factory,
+matching the existing ViewModels). The banner's "Update" tap navigates to
+Settings, where the panel is already seeded from the startup check's result
+(the ViewModel both seeds at construction and observes the banner flow, so a
+check that lands after the ViewModel exists still populates the panel).
+`UpdateIntents` is the ported slice of toadFILES' `util/Intents.kt`:
+`installApkFromUri` with the canRequestPackageInstalls gate +
+ACTION_MANAGE_UNKNOWN_APP_SOURCES round-trip and the four honest
+InstallResults, plus the https-only `openUrl`.
+
+**Files.** New: `app/.../update/data/UpdateChecker.kt`,
+`app/.../update/data/UpdateDownloader.kt`,
+`app/.../update/domain/VersionCompare.kt`,
+`app/.../update/StartupUpdateCheck.kt`, `app/.../update/UpdateIntents.kt`,
+`app/.../viewmodel/UpdateViewModel.kt`, `app/.../ui/update/UpdateBanner.kt`,
+`app/.../ui/settings/UpdatePanel.kt`,
+`app/src/test/.../update/VersionCompareTest.kt`,
+`app/src/test/.../update/UpdateCheckerTest.kt`. Modified:
+`AndroidManifest.xml` (INTERNET + REQUEST_INSTALL_PACKAGES with the
+toadFILES-style privacy comment; the "zero permissions" claim replaced),
+`ToadApplication.kt` (applicationScope), `ui/AppRoot.kt` (startup check,
+banner, update panel wiring), `ui/settings/SettingsScreen.kt` (Updates card,
+new params default-off so existing callers/tests compile unchanged),
+`res/values/strings.xml` (28 new update strings + the About privacy line
+rewritten to name the one network use honestly), `SettingsUiTest.kt`
+(privacy assertion updated to the new text; +1 case for the Updates card),
+`app/build.gradle.kts` (versionCode 4, versionName 1.1.2), `README.md`
+(headline + permission-audit claims updated for the same honesty), this
+WORKLOG.
+
+**Tests.** New `VersionCompareTest` (10 cases: equality, patch/minor/major,
+numeric-not-lexicographic components, v-prefix, 2-component padding,
+pre-release ordering, suffix ties, garbage tags, antisymmetry) and
+`UpdateCheckerTest` (14 cases: first-`.apk` asset pick, no-APK and
+minimal-payload honesty, tag_name refusal, the full retry policy — transient
+IOException retried once, exhausted retries rethrow, 403 never retried, 5xx
+retried, other 4xx and JSON permanent, cancellation propagated — and the
+403/5xx/4xx exceptionFor classification). Both ported from toadFILES'
+VersionCompareTest / UpdateCheckerParsingTest / UpdateCheckerRetryTest and
+adapted to Truth + this repo's backtick naming. No existing assertion
+weakened; the one updated assertion tracks the deliberately rewritten
+privacy string.
+
+**Decisions.**
+- The update feature ends the "zero permissions / zero network" era; the
+  owner-directed port keeps the privacy story honest everywhere it was
+  claimed: manifest comment, About sheet text, README headline and audit
+  bullet, and the CI permissions-audit step now legitimately prints the two
+  update-only permissions (the step was already informational).
+- toadFILES' edition-aware asset pick was dropped, not adapted: this repo's
+  CI builds exactly one release APK, and the release workflow publishes
+  artifacts, not GitHub releases — the first-`.apk` pick is correct for any
+  single-APK release the owner attaches.
+- VM-level error strings (rate limit, 5xx, download failures) stay as
+  exception-carried English messages exactly as in toadFILES, since the
+  ViewModel cannot reach stringResource; every static panel/banner label went
+  through strings.xml per this repo's convention.
+- `docs/PLUGIN_ARCHITECTURE.md` left untouched (it argues the plugin design
+  stays network-free; that remains true of plugins themselves). Its Option C
+  discussion is now historical; noted for the owner below.
+
+**Open questions (owner).** (1) Publish GitHub releases with the release APK
+attached (the checker looks for the first `.apk` asset of `releases/latest`)
+— wanted for the banner/panel to have something to find. (2) Plugin rollout
+(10.2) still pending per Phase 10.1.
+
+**Next task ID.** 3a CI iterate loop; then the next owner-assigned port.

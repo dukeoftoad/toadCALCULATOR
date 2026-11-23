@@ -4,7 +4,9 @@ package com.toadcalculator.ui
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -25,10 +27,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -46,6 +50,9 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.toadcalculator.R
+import com.toadcalculator.ToadApplication
+import com.toadcalculator.update.StartupUpdateCheck
+import com.toadcalculator.update.UpdateIntents
 import com.toadcalculator.ui.calculator.CalculatorScreen
 import com.toadcalculator.ui.history.HistorySheet
 import com.toadcalculator.ui.settings.SettingsScreen
@@ -57,8 +64,10 @@ import com.toadcalculator.ui.tools.ToolDestination
 import com.toadcalculator.ui.tools.ToolsHomeScreen
 import com.toadcalculator.ui.tools.UnitConverterScreen
 import com.toadcalculator.ui.theme.ToadCalculatorTheme
+import com.toadcalculator.ui.update.UpdateBanner
 import com.toadcalculator.viewmodel.CalculatorViewModel
 import com.toadcalculator.viewmodel.SettingsViewModel
+import com.toadcalculator.viewmodel.UpdateViewModel
 import kotlinx.coroutines.delay
 
 enum class AppScreen { CALCULATOR, SETTINGS, TOOLS }
@@ -125,6 +134,22 @@ private fun AppScaffold(settingsViewModel: SettingsViewModel) {
     val history by calculatorViewModel.history.collectAsStateWithLifecycle()
     val calculatorState by calculatorViewModel.uiState.collectAsStateWithLifecycle()
     val scientific = calculatorState.scientific
+    val context = LocalContext.current
+
+    // In-app update flow (ported from toadFILES): one silent check per app
+    // process, fired on open — never periodic, never a download. Failures
+    // (airplane mode etc.) stay silent; only the Settings panel shows errors.
+    // The check runs on the application scope, not a composition scope, so the
+    // network attempt never sits on Compose's idle clock.
+    val startupUpdate = remember { StartupUpdateCheck.instance }
+    LaunchedEffect(Unit) {
+        val appScope = (context.applicationContext as ToadApplication).applicationScope
+        startupUpdate.checkOnce(appScope)
+    }
+    val updateBanner by startupUpdate.banner.collectAsStateWithLifecycle()
+    val bannerDismissed by startupUpdate.bannerDismissed.collectAsStateWithLifecycle()
+    val updateViewModel: UpdateViewModel = viewModel(factory = UpdateViewModel.Factory)
+    val updateState by updateViewModel.state.collectAsStateWithLifecycle()
     val historyCd = stringResource(R.string.cd_history)
     val sciCd = stringResource(R.string.cd_toggle_scientific)
     val settingsCd = stringResource(R.string.cd_open_settings)
@@ -268,32 +293,54 @@ private fun AppScaffold(settingsViewModel: SettingsViewModel) {
         },
         modifier = Modifier.fillMaxSize(),
     ) { innerPadding ->
-        val contentModifier = Modifier
-            .fillMaxSize()
-            .padding(innerPadding)
-        when {
-            screen == AppScreen.SETTINGS -> SettingsScreen(
-                state = settingsViewModel.uiState.collectAsStateWithLifecycle().value,
-                onTheme = settingsViewModel::setTheme,
-                onPrecision = settingsViewModel::setPrecision,
-                onAngleMode = settingsViewModel::setAngleMode,
-                onHaptics = settingsViewModel::setHaptics,
-                onClearHistory = settingsViewModel::clearHistory,
-                onOpenHistorySheet = { showHistory = true },
-                modifier = contentModifier,
-            )
-            screen == AppScreen.TOOLS -> when (activeTool) {
-                ToolDestination.UNIT_CONVERTER -> UnitConverterScreen(modifier = contentModifier)
-                ToolDestination.BMI -> BmiScreen(modifier = contentModifier)
-                ToolDestination.AGE -> AgeScreen(modifier = contentModifier)
-                ToolDestination.DATE_DIFF -> DateDiffScreen(modifier = contentModifier)
-                ToolDestination.PERCENT -> PercentScreen(modifier = contentModifier)
-                null -> ToolsHomeScreen(
-                    onOpen = { activeTool = it },
-                    modifier = contentModifier,
+        // The update banner rides above the screen content on the main
+        // (calculator) screen only — it must never gate or squeeze the other
+        // screens' layouts, and stays invisible unless the silent startup check
+        // found a newer release.
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding),
+        ) {
+            if (screen == AppScreen.CALCULATOR && updateBanner != null && !bannerDismissed) {
+                UpdateBanner(
+                    release = updateBanner,
+                    onOpenUpdateFlow = { screen = AppScreen.SETTINGS },
+                    onDismiss = startupUpdate::dismissBanner,
                 )
             }
-            else -> CalculatorScreen(viewModel = calculatorViewModel, modifier = contentModifier)
+            val contentModifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+            when {
+                screen == AppScreen.SETTINGS -> SettingsScreen(
+                    state = settingsViewModel.uiState.collectAsStateWithLifecycle().value,
+                    onTheme = settingsViewModel::setTheme,
+                    onPrecision = settingsViewModel::setPrecision,
+                    onAngleMode = settingsViewModel::setAngleMode,
+                    onHaptics = settingsViewModel::setHaptics,
+                    onClearHistory = settingsViewModel::clearHistory,
+                    onOpenHistorySheet = { showHistory = true },
+                    update = updateState,
+                    onCheckUpdates = updateViewModel::checkForUpdates,
+                    onDownloadInstall = { updateViewModel.downloadAndInstall(context) },
+                    onDismissUpdate = updateViewModel::clearUpdateState,
+                    onOpenUrl = { url -> UpdateIntents.openUrl(context, url) },
+                    modifier = contentModifier,
+                )
+                screen == AppScreen.TOOLS -> when (activeTool) {
+                    ToolDestination.UNIT_CONVERTER -> UnitConverterScreen(modifier = contentModifier)
+                    ToolDestination.BMI -> BmiScreen(modifier = contentModifier)
+                    ToolDestination.AGE -> AgeScreen(modifier = contentModifier)
+                    ToolDestination.DATE_DIFF -> DateDiffScreen(modifier = contentModifier)
+                    ToolDestination.PERCENT -> PercentScreen(modifier = contentModifier)
+                    null -> ToolsHomeScreen(
+                        onOpen = { activeTool = it },
+                        modifier = contentModifier,
+                    )
+                }
+                else -> CalculatorScreen(viewModel = calculatorViewModel, modifier = contentModifier)
+            }
         }
     }
 
