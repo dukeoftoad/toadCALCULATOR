@@ -3,13 +3,13 @@
 package com.toadcalculator.update
 
 import com.google.common.truth.Truth.assertThat
-import com.google.common.truth.Truth.assertThrows
 import com.toadcalculator.update.data.GithubReleaseChecker
 import com.toadcalculator.update.data.UpdateCheckException
 import com.toadcalculator.update.data.UpdateCheckRateLimitException
 import com.toadcalculator.update.data.UpdateCheckRetryableException
 import kotlinx.coroutines.CancellationException
 import org.json.JSONException
+import org.junit.Assert.assertThrows
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
